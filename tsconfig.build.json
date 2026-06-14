@@ -1,4 +1,17 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "compilerOptions": {
+    /* ... your other settings ... */
+
+    "types": ["node"],                                /* Explicitly include Node.js global types */
+    "skipLibCheck": true                              /* Skip type checking of declaration files */
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*.spec.ts"
+  ]
 }
