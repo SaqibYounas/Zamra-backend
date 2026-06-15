@@ -1,17 +1,27 @@
 {
   "compilerOptions": {
-    /* ... your other settings ... */
-
-    "types": ["node"],                                /* Explicitly include Node.js global types */
-    "skipLibCheck": true                              /* Skip type checking of declaration files */
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2021",
+    "sourceMap": true,
+    
+    "outDir": "./dist", 
+    "rootDir": "./src", 
+    
+    "incremental": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": "./"
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
-    "dist",
     "test",
+    "dist",
     "**/*.spec.ts"
   ]
 }
