@@ -3,16 +3,17 @@
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
-    
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    
     "allowSyntheticDefaultImports": true,
     "target": "es2021",
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "incremental": true,
+    
+    "noEmit": false,
+    "incremental": false, 
+    
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": "./",

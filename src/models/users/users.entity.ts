@@ -9,20 +9,20 @@ import {
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number | undefined;
+  id!: number;
 
   @Column({ length: 100 })
-  name: string | undefined;
+  name!: string;
 
   @Column({ unique: true })
-  email: string | undefined;
+  email!: string;
 
   @Column()
-  password: string | undefined;
+  password!: string;
 
   @CreateDateColumn()
-  createdAt: Date | undefined;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date | undefined;
+  updatedAt!: Date;
 }
