@@ -5,4 +5,8 @@ export class AppService {
   getHello(): string {
     return 'Hello World!';
   }
+
+  getTestMessage(): string {
+    return 'Zamra Water Backend successfully running! 🚀';
+  }
 }
