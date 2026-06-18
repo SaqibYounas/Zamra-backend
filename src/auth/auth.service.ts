@@ -42,7 +42,7 @@ export class AuthService {
       },
     };
   }
-  
+
 async changePassword(user: any, password: any, newPassword: any) {
     if (!password || !newPassword) {
       throw new BadRequestException('Missing field');
