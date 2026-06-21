@@ -1,5 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { Body, Controller, Post, HttpCode, HttpStatus,UseGuards,Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/jwt-auth.guard';
 
@@ -13,13 +21,16 @@ export class AuthController {
     return this.authService.signIn(signInDto.email, signInDto.password);
   }
 
-@UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @Post('update')
-  updatePassword(@Request() req: any, @Body() passUpdateDto: Record<string, any>) {
+  updatePassword(
+    @Request() req: any,
+    @Body() passUpdateDto: Record<string, any>,
+  ) {
     return this.authService.changePassword(
-      req.user, 
-      passUpdateDto.password, 
-      passUpdateDto.newpassword
-    );  
-}
+      req.user,
+      passUpdateDto.password,
+      passUpdateDto.newpassword,
+    );
+  }
 }

@@ -5,7 +5,6 @@ import { User } from './users.entity';
 
 @Injectable()
 export class UserService {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
