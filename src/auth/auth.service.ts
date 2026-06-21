@@ -2,7 +2,7 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from '../models/users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -13,7 +13,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async signIn(
     email: string,
@@ -42,8 +42,8 @@ export class AuthService {
       },
     };
   }
-  
-async changePassword(user: any, password: any, newPassword: any) {
+
+  async changePassword(user: any, password: any, newPassword: any) {
     if (!password || !newPassword) {
       throw new BadRequestException('Missing field');
     }
@@ -59,7 +59,7 @@ async changePassword(user: any, password: any, newPassword: any) {
     }
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    
+
     await this.usersService.create({
       ...userDB,
       password: hashedNewPassword,
