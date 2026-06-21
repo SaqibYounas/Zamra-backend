@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DailyStock } from './dailyStock.entity';
+import { DailyStock, BottleType } from './dailyStock.entity';
 
 @Injectable()
 export class DailyStockService {
@@ -9,12 +9,35 @@ export class DailyStockService {
     @InjectRepository(DailyStock)
     private readonly DailyStockRepository: Repository<DailyStock>,
   ) {}
+  async createDailyStockRegistry(
+    StockData: Partial<DailyStock>,
+  ): Promise<DailyStock> {
+    if (!StockData.bottleType) {
+      throw new Error('Bottle type is mandatory.');
+    }
 
-  async createCompany(userData: Partial<DailyStock>): Promise<DailyStock> {
-    return this.DailyStockRepository.save(userData);
+    return await this.DailyStockRepository.save(StockData);
   }
 
-  async findAll(): Promise<DailyStock[]> {
-    return this.DailyStockRepository.find();
+  async findAllPrices(): Promise<DailyStock[]> {
+    return await this.DailyStockRepository.find({
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+  }
+
+  async findActivePriceByType(bottleType: BottleType): Promise<DailyStock> {
+    const activePrice = await this.DailyStockRepository.findOne({
+      where: { bottleType },
+    });
+
+    if (!activePrice) {
+      throw new NotFoundException(
+        `No active rate found in the market registry for ${bottleType}.`,
+      );
+    }
+
+    return activePrice;
   }
 }

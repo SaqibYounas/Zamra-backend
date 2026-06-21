@@ -8,4 +8,4 @@ import { DailyStockService } from './dailyStock.service';
   providers: [DailyStockService],
   exports: [DailyStockService],
 })
-export class CompanyModule {}
+export class DailyStockModule {}

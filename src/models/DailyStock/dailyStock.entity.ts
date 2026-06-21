@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
 import {
   Entity,
   Column,
@@ -7,7 +8,14 @@ import {
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
-import { PriceManagement } from '../PriceManagement/PriceManagement.entity';
+import { PriceManagement } from '../priceManagement/priceManagement.entity';
+
+export enum BottleType {
+  SMALL = '500ml',
+  LARGE = '1.5L',
+  GALLON = '19L',
+  REFILL = '19L',
+}
 
 @Entity('daily_stock')
 export class DailyStock {
@@ -17,8 +25,12 @@ export class DailyStock {
   @Column('int')
   totalPet!: number;
 
-  @Column('int')
-  bottlePerPet!: number;
+  @Column({
+    type: 'enum',
+    enum: BottleType,
+    default: BottleType.SMALL,
+  })
+  bottleType!: BottleType;
 
   @ManyToOne(() => PriceManagement, (price) => price.stocks, { eager: true })
   @JoinColumn({ name: 'price_management_id' })

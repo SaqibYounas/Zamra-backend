@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
 import {
   Entity,
   Column,
@@ -6,15 +7,26 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { DailyStock } from '../DailyStock/dailyStock.entity';
+import { DailyStock } from '../dailyStock/dailyStock.entity';
+
+export enum BottleType {
+  SMALL = '500ml',
+  LARGE = '1.5L',
+  GALLON = '19L',
+  REFILL = '19L',
+}
 
 @Entity('price_management')
 export class PriceManagement {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
-  bottleType!: string;
+  @Column({
+    type: 'enum',
+    enum: BottleType,
+    default: BottleType.SMALL,
+  })
+  bottleType!: BottleType;
 
   @Column('decimal')
   perBottlePrice!: number;
@@ -24,6 +36,9 @@ export class PriceManagement {
 
   @OneToMany(() => DailyStock, (stock) => stock.priceManagement)
   stocks!: DailyStock[];
+
+  @Column({ type: 'boolean', default: true })
+  isActive!: boolean;
 
   @CreateDateColumn()
   createdAt!: Date;
