@@ -32,6 +32,9 @@ export class PriceManagement {
   perBottlePrice!: number;
 
   @Column('decimal')
+  labelCapPrice!: number;
+
+  @Column('decimal')
   otherExpenses!: number;
 
   @OneToMany(() => DailyStock, (stock) => stock.priceManagement)
