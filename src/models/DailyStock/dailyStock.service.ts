@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DailyStock } from './dailyStock.entity';
@@ -13,10 +13,6 @@ export class DailyStockRepositoryService {
   async createDailyStockRegistry(
     stockData: Partial<DailyStock>,
   ): Promise<DailyStock> {
-    if (!stockData.bottleType) {
-      throw new BadRequestException('Bottle type is mandatory.');
-    }
-
     const newStockRecord = this.dailyStockRepository.create(stockData);
     return await this.dailyStockRepository.save(newStockRecord);
   }
