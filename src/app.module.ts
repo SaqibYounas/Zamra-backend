@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
 import { PriceManagementModule } from './price-management/price-management.module';
+import { DailyStockModule } from './daily-stock/daily-stock.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PriceManagementModule } from './price-management/price-management.modul
     UsersModule,
     CompanyModule,
     PriceManagementModule,
+    DailyStockModule,
   ],
 
   controllers: [AppController],

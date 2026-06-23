@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DailyStock, BottleType } from './dailyStock.entity';
+import { DailyStock } from './dailyStock.entity';
+import { BottleType } from 'src/types/types';
 
 @Injectable()
 export class DailyStockService {

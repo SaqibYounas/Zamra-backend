@@ -5,7 +5,7 @@ import {
   IsBoolean,
   IsOptional,
 } from 'class-validator';
-import { BottleType } from '../../models/priceManagement/priceManagement.entity'; // Apne folder structure ke mutabiq path check kar lena
+import { BottleType } from 'src/types/types';
 
 export class CreatePriceManagementDto {
   @IsEnum(BottleType, {
@@ -22,6 +22,10 @@ export class CreatePriceManagementDto {
   @IsNumber({}, { message: 'Other expenses must be a number.' })
   @IsNotEmpty({ message: 'Other expenses is required.' })
   otherExpenses!: number;
+
+  @IsNumber({}, { message: 'Label+Cap Price expenses must be a number.' })
+  @IsNotEmpty({ message: 'Label+Cap Price expenses is required.' })
+  labelCapPrice!: number;
 
   @IsBoolean({ message: 'isActive must be a boolean value.' })
   @IsOptional()
