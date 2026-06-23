@@ -1,5 +1,5 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { DailyStockRepositoryService } from '../models/dailyStock/dailyStock.service';
+import { DailyStockRepositoryService } from './dailyStock.service';
 import { STOCK_MESSAGES } from 'src/common/constants/messages.constant';
 import { ApiResponse, BottleType } from 'src/types/types';
 

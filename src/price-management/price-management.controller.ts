@@ -4,7 +4,7 @@ import {
   PriceManagementService,
 } from './price-management.service';
 import { CreatePriceManagementDto } from './dto/price-management.dto';
-import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @Controller('price')
 export class PriceManagementController {

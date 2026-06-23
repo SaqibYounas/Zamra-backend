@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { DailyStockServices } from './daily-stock.service';
-import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { CreateDailyStockDto } from './dto/daily-stock.dto';
 import { ApiResponse } from 'src/types/types';
 
