@@ -1,44 +1,45 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DailyStock } from './dailyStock.entity';
-import { BottleType } from 'src/types/types';
 
 @Injectable()
-export class DailyStockService {
+export class DailyStockRepositoryService {
   constructor(
     @InjectRepository(DailyStock)
-    private readonly DailyStockRepository: Repository<DailyStock>,
+    private readonly dailyStockRepository: Repository<DailyStock>,
   ) {}
+
   async createDailyStockRegistry(
-    StockData: Partial<DailyStock>,
+    stockData: Partial<DailyStock>,
   ): Promise<DailyStock> {
-    if (!StockData.bottleType) {
-      throw new Error('Bottle type is mandatory.');
+    if (!stockData.bottleType) {
+      throw new BadRequestException('Bottle type is mandatory.');
     }
 
-    return await this.DailyStockRepository.save(StockData);
+    const newStockRecord = this.dailyStockRepository.create(stockData);
+    return await this.dailyStockRepository.save(newStockRecord);
   }
 
-  async findAllPrices(): Promise<DailyStock[]> {
-    return await this.DailyStockRepository.find({
+  async findAllStocks(): Promise<DailyStock[]> {
+    return await this.dailyStockRepository.find({
       order: {
-        createdAt: 'ASC',
+        createdAt: 'DESC',
       },
     });
   }
 
-  async findActivePriceByType(bottleType: BottleType): Promise<DailyStock> {
-    const activePrice = await this.DailyStockRepository.findOne({
-      where: { bottleType },
-    });
+  // async findStockById(id: number): Promise<DailyStock> {
+  //   const stock = await this.dailyStockRepository.findOne({
+  //     where: { id },
+  //   });
 
-    if (!activePrice) {
-      throw new NotFoundException(
-        `No active rate found in the market registry for ${bottleType}.`,
-      );
-    }
+  //   if (!stock) {
+  //     throw new NotFoundException(
+  //       `Daily stock record with ID ${id} not found.`,
+  //     );
+  //   }
 
-    return activePrice;
-  }
+  //   return stock;
+  // }
 }

@@ -5,3 +5,9 @@ export enum BottleType {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   REFILL = '19L',
 }
+
+export interface ApiResponse {
+  status: number;
+  message?: string;
+  data?: any;
+}
