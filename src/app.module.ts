@@ -7,6 +7,8 @@ import { User } from './models/users/users.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
+import { PriceManagementModule } from './price-management/price-management.module';
+import { DailyStockModule } from './daily-stock/daily-stock.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { CompanyModule } from './company/company.module';
     AuthModule,
     UsersModule,
     CompanyModule,
+    PriceManagementModule,
+    DailyStockModule,
   ],
 
   controllers: [AppController],

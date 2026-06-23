@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PriceManagement, BottleType } from './PriceManagement.entity';
+import { PriceManagement, BottleType } from './priceManagement.entity';
 
 @Injectable()
-export class PriceManagementService {
+export class PriceManagementRepositoryService {
   constructor(
     @InjectRepository(PriceManagement)
     private readonly priceManagRepository: Repository<PriceManagement>,
@@ -14,7 +18,7 @@ export class PriceManagementService {
     priceData: Partial<PriceManagement>,
   ): Promise<PriceManagement> {
     if (!priceData.bottleType) {
-      throw new Error('Bottle type is mandatory.');
+      throw new BadRequestException('Bottle type is mandatory.');
     }
 
     await this.priceManagRepository.update(
@@ -54,3 +58,4 @@ export class PriceManagementService {
     return activePrice;
   }
 }
+export { PriceManagement };
