@@ -26,9 +26,12 @@ export class DailyStock {
   bottleType!: BottleType;
 
   @Column('int')
-  bootlePerPet!: number;
+  bottlePerPet!: number;
 
-  @ManyToOne(() => PriceManagement, (price) => price.stocks, { eager: true })
+  @ManyToOne(() => PriceManagement, (price) => price.stocks, {
+    eager: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'price_management_id' })
   priceManagement!: PriceManagement;
 

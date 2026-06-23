@@ -1,11 +1,13 @@
-import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { AUTH_MESSAGES } from '../../common/constants/messages.constant';
 
-export class passUpdateDto {
+export class PassUpdateDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: AUTH_MESSAGES.VALIDATION.OLD_PASSWORD_EMPTY })
   readonly password!: string;
 
-  @IsEmail()
-  @IsNotEmpty()
+  @IsString()
+  @MinLength(8, { message: AUTH_MESSAGES.VALIDATION.NEW_PASSWORD_SHORT })
+  @IsNotEmpty({ message: AUTH_MESSAGES.VALIDATION.NEW_PASSWORD_EMPTY })
   readonly newpassword!: string;
 }

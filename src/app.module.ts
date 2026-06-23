@@ -9,7 +9,9 @@ import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
 import { PriceManagementModule } from './price-management/price-management.module';
 import { DailyStockModule } from './daily-stock/daily-stock.module';
-
+import { CompanyRepositoryModule } from './models/company/company.module';
+import { DailyStockRepositoryModule } from './models/dailyStock/dailyStock.module';
+import { PriceManagementRepositoryModule } from './models/priceManagement/priceManagement.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,6 +34,9 @@ import { DailyStockModule } from './daily-stock/daily-stock.module';
     CompanyModule,
     PriceManagementModule,
     DailyStockModule,
+    CompanyRepositoryModule,
+    DailyStockRepositoryModule,
+    PriceManagementRepositoryModule
   ],
 
   controllers: [AppController],

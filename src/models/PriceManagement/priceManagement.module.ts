@@ -8,4 +8,4 @@ import { PriceManagementRepositoryService } from './priceManagement.service';
   providers: [PriceManagementRepositoryService],
   exports: [PriceManagementRepositoryService],
 })
-export class PriceManagementModule {}
+export class PriceManagementRepositoryModule {}
