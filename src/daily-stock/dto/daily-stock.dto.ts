@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
-import { BottleType } from 'src/types/types';
+import { BottleType } from '@app-types/types';
 
 export class CreateDailyStockDto {
   @IsEnum(BottleType, {

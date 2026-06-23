@@ -11,3 +11,4 @@ export interface ApiResponse {
   message?: string;
   data?: any;
 }
+export class ForceBuildTrigger {}

@@ -1,7 +1,7 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { CompanyRepositoryService } from 'src/company/company.repository.service';
 import { COMPANY_MESSAGES } from 'src/common/constants/messages.constant';
-import { ApiResponse } from 'src/types/types';
+import { ApiResponse } from '@app-types/types';
 
 interface CompanyPayload {
   name: string;

@@ -1,7 +1,7 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { DailyStockRepositoryService } from './dailyStock.service';
-import { STOCK_MESSAGES } from 'src/common/constants/messages.constant';
-import { ApiResponse, BottleType } from 'src/types/types';
+import { DailyStockervice } from './dailyStock.service';
+import { STOCK_MESSAGES } from '../common/constants/messages.constant';
+import { ApiResponse, BottleType } from '@app-types/types';
 
 interface DailyStockPayload {
   bottleType: BottleType;
@@ -10,8 +10,8 @@ interface DailyStockPayload {
 }
 
 @Injectable()
-export class DailyStockServices {
-  constructor(private readonly dailyStock: DailyStockRepositoryService) {}
+export class DailyStockRepositoryServices {
+  constructor(private readonly dailyStock: DailyStockervice) {}
 
   async registerStock(payload: DailyStockPayload): Promise<ApiResponse> {
     const createStock = await this.dailyStock.createDailyStockRegistry(payload);

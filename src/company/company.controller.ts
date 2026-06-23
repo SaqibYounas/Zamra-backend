@@ -1,8 +1,8 @@
 import { Controller, UseGuards, Post, Get, Body } from '@nestjs/common';
 import { AuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { CompanyServices, ApiResponse } from './company.service';
+import { CompanyServices } from './company.service';
 import { companyDto } from './dto/company.dto';
-
+import { ApiResponse } from '@app-types/types';
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyServices: CompanyServices) {}

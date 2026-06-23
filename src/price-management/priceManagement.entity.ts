@@ -6,8 +6,8 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { DailyStock } from '../../daily-stock/dailyStock.entity';
-import { BottleType } from 'src/types/types';
+import { BottleType } from '@app-types/types';
+import { DailyStock } from '../daily-stock/dailyStock.entity';
 
 @Entity('price_management')
 export class PriceManagement {

@@ -7,8 +7,8 @@ import {
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
-import { BottleType } from 'src/types/types';
-import { PriceManagement } from 'src/price-management/priceManagement.entity';
+import { BottleType } from '@app-types/types';
+import { PriceManagement } from '../price-management/priceManagement.entity';
 
 @Entity('daily_stock')
 export class DailyStock {

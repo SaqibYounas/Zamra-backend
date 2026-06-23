@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { DailyStock } from './dailyStock.entity';
 
 @Injectable()
-export class DailyStockRepositoryService {
+export class DailyStockervice {
   constructor(
     @InjectRepository(DailyStock)
     private readonly dailyStockRepository: Repository<DailyStock>,

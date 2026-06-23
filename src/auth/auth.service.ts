@@ -4,15 +4,14 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { UserService } from '../models/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AUTH_MESSAGES } from '../common/constants/messages.constant';
-
+import { UserRepositoryService } from './user/users.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UserService,
+    private readonly usersService: UserRepositoryService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -62,7 +61,7 @@ export class AuthService {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    await this.usersService.update(userDB.id, {
+    this.usersService.update(userDB.id, {
       password: hashedNewPassword,
     });
 

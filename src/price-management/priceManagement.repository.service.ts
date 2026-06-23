@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PriceManagement } from './priceManagement.entity';
-import { BottleType } from 'src/types/types';
+import { BottleType } from '@app-types/types';
 
 @Injectable()
 export class PriceManagementRepositoryService {
