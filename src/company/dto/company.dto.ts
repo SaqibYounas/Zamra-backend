@@ -1,4 +1,5 @@
 import { IsString, IsEmail, IsNumber, IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class companyDto {
   @IsString()
@@ -18,6 +19,7 @@ export class companyDto {
   city!: string;
 
   @IsNumber()
+  @Transform(({ value }) => Number(value))
   @IsNotEmpty({ message: 'Contact number is required.' })
   contact!: number;
 

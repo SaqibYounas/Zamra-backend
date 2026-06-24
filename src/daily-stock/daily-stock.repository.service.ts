@@ -1,35 +1,44 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { DailyStockervice } from './dailyStock.service';
-import { STOCK_MESSAGES } from '../common/constants/messages.constant';
-import { ApiResponse, BottleType } from '@app-types/types';
-
-interface DailyStockPayload {
-  bottleType: BottleType;
-  totalPet: number;
-  bottlePerPet: number;
-}
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { DailyStock } from './dailyStock.entity';
+import { PriceManagement } from '../price-management/priceManagement.entity';
 
 @Injectable()
 export class DailyStockRepositoryServices {
-  constructor(private readonly dailyStock: DailyStockervice) {}
+  constructor(
+    @InjectRepository(DailyStock)
+    private readonly dailyStockRepository: Repository<DailyStock>,
+    @InjectRepository(PriceManagement)
+    private readonly priceManagementRepository: Repository<PriceManagement>,
+  ) {}
 
-  async registerStock(payload: DailyStockPayload): Promise<ApiResponse> {
-    const createStock = await this.dailyStock.createDailyStockRegistry(payload);
+  async createDailyStockRegistry(
+    stockData: Partial<DailyStock>,
+  ): Promise<DailyStock> {
+    const activePrice = await this.priceManagementRepository.findOne({
+      where: { isActive: true } as any,
+    });
 
-    return {
-      status: HttpStatus.CREATED,
-      message: STOCK_MESSAGES.SUCCESS.CREATED,
-      data: createStock,
-    };
+    if (!activePrice) {
+      throw new NotFoundException(
+        'No active price management record found. Please activate a price rate first.',
+      );
+    }
+
+    const newStockRecord = this.dailyStockRepository.create({
+      ...stockData,
+      priceManagement: activePrice,
+    });
+
+    return await this.dailyStockRepository.save(newStockRecord);
   }
 
-  async fetchAllStocks(): Promise<ApiResponse> {
-    const allStocks = await this.dailyStock.findAllStocks();
-
-    return {
-      status: HttpStatus.OK,
-      message: STOCK_MESSAGES.SUCCESS.FETCHED,
-      data: allStocks,
-    };
+  async findAllStocks(): Promise<DailyStock[]> {
+    return await this.dailyStockRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }

@@ -5,9 +5,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DailyStock } from './dailyStock.entity';
 import { DailyStockervice } from './dailyStock.service';
 import { AuthModule } from 'src/auth/auth.module';
+import { PriceManagement } from '../price-management/priceManagement.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DailyStock]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([DailyStock, PriceManagement]),
+    AuthModule,
+  ],
   controllers: [DailyStockController],
   providers: [DailyStockervice, DailyStockRepositoryServices],
 })

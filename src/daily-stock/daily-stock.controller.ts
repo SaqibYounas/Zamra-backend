@@ -1,17 +1,16 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { DailyStockRepositoryServices } from './daily-stock.repository.service';
 import { AuthGuard } from '../common/guards/jwt-auth.guard';
 import { CreateDailyStockDto } from './dto/daily-stock.dto';
 import { ApiResponse } from '@app-types/types';
-
+import { DailyStockervice } from './dailyStock.service';
 @Controller('daily-stock')
 export class DailyStockController {
-  constructor(private readonly dailyStock: DailyStockRepositoryServices) {}
+  constructor(private readonly dailyStock: DailyStockervice) {}
 
   @UseGuards(AuthGuard)
   @Get('/')
   async getAllStocks(): Promise<ApiResponse> {
-    return await this.dailyStock.fetchAllStocks();
+    return await this.dailyStock.findAllStocks();
   }
 
   @UseGuards(AuthGuard)
@@ -19,6 +18,6 @@ export class DailyStockController {
   async createStock(
     @Body() payload: CreateDailyStockDto,
   ): Promise<ApiResponse> {
-    return await this.dailyStock.registerStock(payload);
+    return await this.dailyStock.createDailyStockRegistry(payload);
   }
 }
