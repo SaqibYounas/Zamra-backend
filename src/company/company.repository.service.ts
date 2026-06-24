@@ -7,14 +7,23 @@ import { Company } from './company.entity';
 export class CompanyRepositoryService {
   constructor(
     @InjectRepository(Company)
-    private readonly CompanyRepository: Repository<Company>,
+    private readonly companyRepository: Repository<Company>,
   ) {}
 
   async createCompany(userData: Partial<Company>): Promise<Company> {
-    return this.CompanyRepository.save(userData);
+    return this.companyRepository.save(userData);
   }
 
   async findAll(): Promise<Company[]> {
-    return this.CompanyRepository.find();
+    return this.companyRepository.find();
+  }
+
+  async findOneLast(): Promise<Company | null> {
+    return await this.companyRepository.findOne({
+      where: {},
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }

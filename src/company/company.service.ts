@@ -35,4 +35,12 @@ export class CompanyServices {
       data: companies,
     };
   }
+  async fetchLatestCompany(): Promise<ApiResponse> {
+    const company = await this.companyService.findOneLast();
+    return {
+      status: HttpStatus.OK,
+      message: COMPANY_MESSAGES.SUCCESS.FETCHED,
+      data: company,
+    };
+  }
 }

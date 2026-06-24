@@ -18,4 +18,10 @@ export class CompanyController {
   async fetchCompany(): Promise<ApiResponse> {
     return await this.companyServices.fetchCompany();
   }
+
+  @UseGuards(AuthGuard)
+  @Get('last')
+  async fetchCompanyLast(): Promise<ApiResponse> {
+    return await this.companyServices.fetchLatestCompany();
+  }
 }

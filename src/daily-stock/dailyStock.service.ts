@@ -1,41 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { DailyStock } from './dailyStock.entity';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { DailyStockRepositoryServices } from './daily-stock.repository.service';
+import { ApiResponse, BottleType } from '@app-types/types';
+import { STOCK_MESSAGES } from '@common/constants/messages.constant';
+
+interface IDailyStock {
+  bottleType: BottleType;
+  totalPet: number;
+  bottlePerPet: number;
+}
 
 @Injectable()
 export class DailyStockervice {
   constructor(
-    @InjectRepository(DailyStock)
-    private readonly dailyStockRepository: Repository<DailyStock>,
+    private readonly dailyStockRepository: DailyStockRepositoryServices,
   ) {}
 
-  async createDailyStockRegistry(
-    stockData: Partial<DailyStock>,
-  ): Promise<DailyStock> {
-    const newStockRecord = this.dailyStockRepository.create(stockData);
-    return await this.dailyStockRepository.save(newStockRecord);
+  async createDailyStockRegistry(stockData: IDailyStock): Promise<ApiResponse> {
+    const newStockRecord =
+      await this.dailyStockRepository.createDailyStockRegistry(stockData);
+    return {
+      status: HttpStatus.CREATED,
+      message: STOCK_MESSAGES.SUCCESS.CREATED,
+      data: newStockRecord,
+    };
   }
 
-  async findAllStocks(): Promise<DailyStock[]> {
-    return await this.dailyStockRepository.find({
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+  async findAllStocks(): Promise<ApiResponse> {
+    const allStocks = await this.dailyStockRepository.findAllStocks();
+    return {
+      status: HttpStatus.OK,
+      message: STOCK_MESSAGES.SUCCESS.FETCHED,
+      data: allStocks,
+    };
   }
-
-  // async findStockById(id: number): Promise<DailyStock> {
-  //   const stock = await this.dailyStockRepository.findOne({
-  //     where: { id },
-  //   });
-
-  //   if (!stock) {
-  //     throw new NotFoundException(
-  //       `Daily stock record with ID ${id} not found.`,
-  //     );
-  //   }
-
-  //   return stock;
-  // }
 }

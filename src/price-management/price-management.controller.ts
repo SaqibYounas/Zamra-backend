@@ -9,7 +9,7 @@ export class PriceManagementController {
   constructor(private readonly priceMangement: PriceManagementService) {}
 
   @UseGuards(AuthGuard)
-  @Get('all')
+  @Get('')
   async getcurrentPrice(): Promise<ApiResponse> {
     return await this.priceMangement.fetchAllPrice();
   }

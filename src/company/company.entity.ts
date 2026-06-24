@@ -24,7 +24,7 @@ export class Company {
   contact!: number;
 
   @Column()
-  Address!: string;
+  address!: string;
 
   @Column()
   city!: string;
