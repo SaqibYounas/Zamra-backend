@@ -4,7 +4,10 @@ import { Repository } from 'typeorm';
 import { User } from './users.entity';
 
 @Injectable()
-export class UserService {
+export class UserRepositoryService {
+  update(id: number, arg1: { password: string }) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,

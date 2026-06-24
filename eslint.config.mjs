@@ -25,6 +25,7 @@ export default tseslint.config(
       sourceType: 'module', 
       parserOptions: {
         projectService: true,
+        // @ts-ignore
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -40,6 +41,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
       'typescript-eslint/no-unsafe-argument':'off',
       '@typescript-eslint/no-unsafe-return':'off',
+      'typescript-config/consistent-casing':'off',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },

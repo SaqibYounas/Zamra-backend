@@ -1,10 +1,8 @@
 import { Controller, Post, Get, UseGuards, Body } from '@nestjs/common';
-import {
-  ApiResponse,
-  PriceManagementService,
-} from './price-management.service';
+import { PriceManagementService } from './price-management.service';
 import { CreatePriceManagementDto } from './dto/price-management.dto';
-import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { ApiResponse } from '@app-types/types';
 
 @Controller('price')
 export class PriceManagementController {

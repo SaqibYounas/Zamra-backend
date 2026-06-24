@@ -17,8 +17,12 @@
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": "./",
-    "types": ["node"]
-  },
+    "types": ["node"],
+    "paths": {
+      "@app-types/*": ["src/types/*"],
+      "@models/*": ["src/models/*"],
+      "@common/*": ["src/common/*"]
+    }},
   "include": ["src/**/*"],
   "exclude": [
     "node_modules",

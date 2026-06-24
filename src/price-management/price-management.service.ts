@@ -1,7 +1,7 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { PriceManagementRepositoryService } from '../models/priceManagement/priceManagement.service';
-import { BottleType, ApiResponse } from 'src/types/types';
-import { PRICE_MESSAGES } from 'src/common/constants/messages.constant';
+import { BottleType, ApiResponse } from '@app-types/types';
+import { PRICE_MESSAGES } from '../common/constants/messages.constant';
+import { PriceManagementRepositoryService } from './priceManagement.repository.service';
 
 interface PriceManagePayload {
   bottleType: BottleType;

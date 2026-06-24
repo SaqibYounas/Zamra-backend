@@ -5,7 +5,7 @@ import {
   IsBoolean,
   IsOptional,
 } from 'class-validator';
-import { BottleType } from 'src/types/types';
+import { BottleType } from '@app-types/types';
 
 export class CreatePriceManagementDto {
   @IsEnum(BottleType, {
