@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY . .
 
@@ -17,7 +17,7 @@ FROM node:22.14.0
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --only=production
+RUN npm install --only=production --legacy-peer-deps
 
 COPY --from=builder /app/dist ./dist
 COPY .env ./
