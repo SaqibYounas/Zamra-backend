@@ -1,0 +1,31 @@
+name: Zamra Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: #
+
+jobs:
+  deploy-backend:
+    name: Build & Deploy to AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code from GitHub
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: 13.235.114.234
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/zamra/Zamra-backend
+
+            git pull origin main
+
+            sudo docker compose down
+
+            sudo docker compose up -d --build
