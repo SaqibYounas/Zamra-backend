@@ -10,10 +10,9 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    
+    "moduleResolution": "node16",
     "noEmit": false,
     "incremental": false, 
-    
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": "./",
@@ -22,7 +21,8 @@
       "@app-types/*": ["src/types/*"],
       "@models/*": ["src/models/*"],
       "@common/*": ["src/common/*"]
-    }},
+    }
+  },
   "include": ["src/**/*"],
   "exclude": [
     "node_modules",
