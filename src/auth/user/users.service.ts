@@ -5,9 +5,6 @@ import { User } from './users.entity';
 
 @Injectable()
 export class UserRepositoryService {
-  update(id: number, arg1: { password: string }) {
-    throw new Error('Method not implemented.');
-  }
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -19,17 +16,21 @@ export class UserRepositoryService {
 
   async findOneByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { email: email },
+      where: { email },
     });
   }
 
   async findOneById(id: number): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
   }
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
+  }
+
+  async update(id: number, updateData: Partial<User>): Promise<any> {
+    return this.userRepository.update(id, updateData);
   }
 }
