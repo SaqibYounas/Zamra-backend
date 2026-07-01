@@ -20,29 +20,37 @@ export class RagService {
     // 1. Query the Qdrant cluster for semantic matches (Fixed trailing comma to semicolon)
     const relevantDocs = await this.vectorService.similaritySearch(
       userQuery,
-      3,
+      5,
     );
     // 2. Synthesize context fragments
     const context = relevantDocs
       .map((doc: { pageContent: any }) => doc.pageContent)
       .join('\n\n');
 
-    if (!context) {
-      return 'I could not find any relevant information in the knowledge base to answer your question.';
+    if (!context || context.trim().length < 20) {
+      return 'No relevant product information found.';
     }
 
     // 3. Build a structured systemic prompt boundaries
     const prompt = `
-      You are an assistant answering questions based strictly on the knowledge context below.
-      If the answer cannot be found directly in the text provided, respond with: "I do not know". Do not speculate.
+You are a helpful assistant.
 
-      Context:
-      ${context}
+Rules:
+- Give SHORT and DIRECT answers only.
+- Do NOT explain step-by-step calculations.
+- Do NOT repeat the same information.
+- Do NOT add unnecessary sentences like "to find the price" or "we need to look at".
+- Always respond in 1–2 sentences maximum.
+- Be natural and user-friendly.
 
-      Question: ${userQuery}
-      Answer:
-    `;
+Context:
+${context}
 
+Question:
+${userQuery}
+
+Answer:
+`;
     // 4. Return plaintext inference completion back to the client controller
     const response = await this.llm.invoke(prompt);
     return response.content as string;
