@@ -1,46 +1,48 @@
-# Zamra Water Plant POS & Business Management System
+# Zamra Water Plant Backend
 
 ## Description
 
-Zamra Water Plant POS & Business Management System is a backend application built using NestJS and TypeScript. The system is designed to help water plant businesses efficiently manage daily operations, including sales, customer records, inventory, billing, employee management, and financial reporting.
+Zamra Water Plant Backend is a NestJS-based server application designed for a water business management platform. It powers the core business operations of Zamra, including company information, stock management, pricing, billing, authentication, and an AI-powered chatbot experience for business queries.
 
-NestJS was chosen because it provides a scalable, maintainable, and structured architecture that is ideal for business applications requiring long-term growth and reliability.
+The backend is built to be modular, scalable, and secure, making it suitable for real-world business workflows and future expansion.
 
-## Why NestJS?
+## Key Highlights
 
-The following are the key reasons for using NestJS in this project:
+* Secure authentication and authorization using JWT
+* Company, stock, pricing, and daily business data management
+* REST APIs for frontend integration
+* PostgreSQL database support with TypeORM
+* AI chatbot support with retrieval-based knowledge handling
+* Docker-ready setup for easy deployment
 
-* Structured and modular architecture for large-scale applications.
-* Built with TypeScript for better code quality and maintainability.
-* Dependency Injection support for clean and reusable code.
-* Easy integration with databases such as PostgreSQL and MySQL.
-* Built-in support for validation, authentication, and authorization.
-* Suitable for GraphQl and future microservice expansion.
-* High performance and scalability for growing business needs.
-* Strong community support and extensive documentation.
+## Chatbot Architecture
+
+The chatbot module uses a retrieval and ingestion pipeline to store and retrieve business knowledge from the database.
+
+![Ingestion Pipeline](./public/ingestion_pipeline.png)
+
+![Retrieval and Generation Pipeline](./public/retrieval_generation_pipeline.png)
 
 ## Features
 
 * Point of Sale (POS) Management
-* Product Management
-* Inventory Tracking
-* Customer Management
-* Sales & Purchase Records
-* Employee Management
-* Expense Tracking
-* Invoice Generation
-* Dashboard & Analytics
-* Role-Based Access Control
+* Product and Stock Management
+* Pricing and Daily Stock Records
+* Company and Customer Information Management
+* Billing and Invoice Support
 * Secure Authentication (JWT)
+* AI Chatbot for business assistance
+* Dashboard and reporting support
 
 ## Technology Stack
 
 * NestJS
 * TypeScript
 * PostgreSQL
-* Prisma ORM / TypeORM
+* TypeORM
 * JWT Authentication
-* Docker (Optional)
+* Docker
+* LangChain / Qdrant / Hugging Face integrations for chatbot intelligence
 
 ## Project Setup
 
@@ -69,11 +71,11 @@ npm run test:cov
 
 ## Future Enhancements
 
-* Multi-Branch Support
-* Online Order Management
-* Delivery Tracking
-* Mobile Application Integration
-* Advanced Reporting & Analytics
+* Multi-branch support
+* Online order and delivery tracking
+* Mobile app integration
+* Advanced analytics and reporting
+* Expanded chatbot knowledge sources
 
 ## License
 
