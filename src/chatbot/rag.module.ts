@@ -6,8 +6,8 @@ import { RagService } from './rag.service';
 import { RagController } from './rag.controller';
 
 @Module({
-  Imports: [ScheduleModule.forRoot()],
-  Controllers: [RagController],
-  Providers: [VectorService, SyncService, RagService],
+  imports: [ScheduleModule.forRoot()],
+  controllers: [RagController],
+  providers: [VectorService, SyncService, RagService],
 })
 export class RagModule {}

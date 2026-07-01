@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
 import { PriceManagementModule } from './price-management/price-management.module';
 import { DailyStockModule } from './daily-stock/daily-stock.module';
+import { RagModule } from './chatbot/rag.module';
 import { User } from './auth/user/users.entity';
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { User } from './auth/user/users.entity';
     CompanyModule,
     PriceManagementModule,
     DailyStockModule,
+    RagModule,
   ],
 
   controllers: [AppController],

@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { VectorService } from './vector.service';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { Document } from '@langchain/core/documents';
 import { Client } from 'pg';
 
 @Injectable()
 export class SyncService {
-  // Correctly inject the vector service through the constructor to manage runtime instances
   constructor(private readonly vectorService: VectorService) {}
 
-  // Cron Expression for running exactly once every 6 hours
   @Cron('0 */6 * * *')
   async handleSixHourSync() {
     console.log(
@@ -18,50 +16,111 @@ export class SyncService {
     );
 
     const client = new Client({
-      connectionString: process.env.NEON_DATABASE_URL,
+      connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
     });
     await client.connect();
 
-    // Query extracts data records altered or created within the past 6 hours
-    const queryText = `
-      SELECT id, title, content, updated_at 
-      FROM articles 
-      WHERE updated_at >= NOW() - INTERVAL '6 hours'
-    `;
-    const res = await client.query(queryText);
-    const rawData = res.rows;
+    // Tables to index (exclude `users` by default). Add or remove names as needed.
+    const tablesToIndex = [
+      'company',
+      'daily_stock',
+      'price_management',
+      'articles',
+    ];
+
+    const rawData: { table: string; rows: any[] }[] = [];
+
+    for (const table of tablesToIndex) {
+      try {
+        // Prefer `updated_at`, fall back to `updatedAt` or fetch all rows if neither column exists
+        let res;
+        try {
+          res = await client.query(
+            `SELECT * FROM ${table} WHERE updated_at >= NOW() - INTERVAL '6 hours'`,
+          );
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (e) {
+          try {
+            res = await client.query(
+              `SELECT * FROM ${table} WHERE "updatedAt" >= NOW() - INTERVAL '6 hours'`,
+            );
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (e2) {
+            // If both queries fail (no such column), fetch all rows and filter in JS
+            res = await client.query(`SELECT * FROM ${table}`);
+          }
+        }
+
+        rawData.push({ table, rows: res.rows });
+      } catch (err) {
+        console.warn(
+          `Failed to query table ${table}:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
     await client.end();
 
-    if (rawData.length === 0) {
+    // Flatten rows and filter by update timestamp in JS when needed
+    const rowsToProcess: { table: string; row: any }[] = [];
+    const SIX_HOURS_AGO = Date.now() - 6 * 60 * 60 * 1000;
+
+    for (const batch of rawData) {
+      for (const row of batch.rows) {
+        const updated = row.updated_at ?? row.updatedAt ?? row.updatedAt;
+        if (updated) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          const updatedTime = new Date(updated).getTime();
+          if (updatedTime >= SIX_HOURS_AGO) {
+            rowsToProcess.push({ table: batch.table, row });
+          }
+        } else {
+          // If no timestamp column, include by default
+          rowsToProcess.push({ table: batch.table, row });
+        }
+      }
+    }
+
+    if (rowsToProcess.length === 0) {
       console.log(
         'Ingestion Pipeline: No new or updated data modifications found.',
       );
-      return; // Return early if there's no data to process
+      return;
     }
 
     // Initialize character splitter setup
     const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 500, // Enforce lowercase configurations
+      chunkSize: 500,
       chunkOverlap: 50,
     });
 
     const docsToUpload: Document[] = [];
 
-    for (const item of rawData) {
-      const fullText = `Title: ${item.title}\nContent: ${item.content}`;
+    for (const item of rowsToProcess) {
+      const row = item.row;
+      // Build a readable text representation from all fields, skipping sensitive fields
+      const parts: string[] = [];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      for (const key of Object.keys(row)) {
+        if (key.toLowerCase().includes('password')) continue;
+        const value = row[key];
+        const valueStr =
+          typeof value === 'object' ? JSON.stringify(value) : String(value);
+        parts.push(`${key}: ${valueStr}`);
+      }
+
+      const fullText = parts.join('\n');
       const chunks = await textSplitter.splitText(fullText);
 
-      // Fixed casing on "for" and "docsToUpload"
       for (const chunk of chunks) {
         docsToUpload.push(
-          // Removed duplicate "new" keyword syntax
           new Document({
             pageContent: chunk,
             metadata: {
-              originalId: item.id,
-              source: 'neondb_articles',
-              timestamp: item.updated_at,
+              originalId: row.id ?? row.ID ?? null,
+              source: item.table,
+              timestamp: row.updated_at ?? row.updatedAt ?? null,
             },
           }),
         );
