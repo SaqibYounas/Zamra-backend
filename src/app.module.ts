@@ -9,6 +9,7 @@ import { PriceManagementModule } from './price-management/price-management.modul
 import { DailyStockModule } from './daily-stock/daily-stock.module';
 import { RagModule } from './chatbot/rag.module';
 import { User } from './auth/user/users.entity';
+import { BillingModule } from './billing/billing.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,6 +32,7 @@ import { User } from './auth/user/users.entity';
     PriceManagementModule,
     DailyStockModule,
     RagModule,
+    BillingModule,
   ],
 
   controllers: [AppController],
