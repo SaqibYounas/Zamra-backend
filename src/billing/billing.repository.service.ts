@@ -19,16 +19,17 @@ export class BillingRepositoryService {
     private readonly shippingRepository: Repository<ShippingAddress>,
   ) {}
 
-  async insertInvoice(invoiceData: Partial<Invoice>): Promise<Invoice> {
-    const customer = await this.findCustomer(invoiceData.customer?.id);
-    const shippingAddress = invoiceData.shippingAddress?.id
-      ? await this.findShippingAddress(invoiceData.shippingAddress.id)
+  async insertInvoice(invoiceData: any): Promise<Invoice> {
+    const customer = await this.findCustomerById(invoiceData.customerId);
+    const shippingAddress = invoiceData.shippingAddressId
+      ? await this.findShippingAddressById(invoiceData.shippingAddressId)
       : undefined;
 
-    const items = invoiceData.items?.map((item) =>
+    const items = invoiceData.items?.map((item: any) =>
       this.invoiceItemRepository.create(item),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const invoice = this.invoiceRepository.create({
       ...invoiceData,
       customer,
@@ -44,14 +45,24 @@ export class BillingRepositoryService {
     return await this.customerRepository.save(newCustomer);
   }
 
-  async createShopping(
-    shippingDData: Partial<ShippingAddress>,
+  async createShippingAddress(
+    shippingData: Partial<ShippingAddress>,
   ): Promise<ShippingAddress> {
-    const newShipping = this.customerRepository.create(shippingDData);
+    const newShipping = this.shippingRepository.create(shippingData);
     return await this.shippingRepository.save(newShipping);
   }
 
-  async findCustomer(customerId?: number): Promise<Customer> {
+  async findCustomerByEmail(email: string): Promise<Customer | null> {
+    return await this.customerRepository.findOne({ where: { email } as any });
+  }
+
+  async findShippingAddressByPhone(
+    phone: string,
+  ): Promise<ShippingAddress | null> {
+    return await this.shippingRepository.findOne({ where: { phone } as any });
+  }
+
+  async findCustomerById(customerId: number): Promise<Customer> {
     if (!customerId) {
       throw new NotFoundException(
         'Customer ID is required to create an invoice.',
@@ -69,7 +80,7 @@ export class BillingRepositoryService {
     return customer;
   }
 
-  async findShippingAddress(
+  async findShippingAddressById(
     shippingAddressId: number,
   ): Promise<ShippingAddress> {
     const shippingAddress = await this.shippingRepository.findOne({
