@@ -34,7 +34,6 @@ export class VectorService implements OnModuleInit {
     }
   }
 
-  // Used by the Ingestion Pipeline
   async addDocuments(documents: Document[]): Promise<void> {
     if (!this.vectorStore) {
       console.warn('Vector store is not ready; skipping document upload.');
@@ -44,7 +43,6 @@ export class VectorService implements OnModuleInit {
     await this.vectorStore.addDocuments(documents);
   }
 
-  // Used by the Retrieval Pipeline
   async similaritySearch(query: string, k = 3): Promise<Document[]> {
     if (!this.vectorStore) {
       return [];

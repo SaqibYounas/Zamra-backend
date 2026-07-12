@@ -1,10 +1,12 @@
 import {
   IsString,
+  IsEmail,
   IsNumber,
   IsNotEmpty,
   IsArray,
   ValidateNested,
   IsDateString,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -33,6 +35,50 @@ export class CreateInvoiceItemDto {
   sortOrder!: number;
 }
 
+export class CreateCustomerDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Company name is required.' })
+  companyName!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Attention/POC is required.' })
+  attentionPoc!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Mailing address is required.' })
+  mailingAddress!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'City is required.' })
+  city!: string;
+
+  @IsEmail({}, { message: 'Please enter a valid email address.' })
+  @IsNotEmpty({ message: 'Email is required.' })
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Phone is required.' })
+  phone!: string;
+}
+
+export class CreateShippingDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Warehouse name is required.' })
+  warehouseName!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Attention to is required.' })
+  attentionTo!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Phone is required.' })
+  phone!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Delivery address is required.' })
+  deliveryAddress!: string;
+}
+
 export class CreateInvoiceDto {
   @IsString()
   @IsNotEmpty({ message: 'Invoice number is required.' })
@@ -40,13 +86,23 @@ export class CreateInvoiceDto {
 
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty({ message: 'Customer ID is required.' })
-  customerId!: number;
+  @IsOptional()
+  customerId?: number;
+
+  @ValidateNested()
+  @Type(() => CreateCustomerDto)
+  @IsOptional()
+  customer?: CreateCustomerDto;
 
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty({ message: 'Shipping address ID is required.' })
-  shippingAddressId!: number;
+  @IsOptional()
+  shippingAddressId?: number;
+
+  @ValidateNested()
+  @Type(() => CreateShippingDto)
+  @IsOptional()
+  shippingAddress?: CreateShippingDto;
 
   @IsString()
   @IsNotEmpty({ message: 'PO number is required.' })
