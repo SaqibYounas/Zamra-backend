@@ -30,14 +30,18 @@ export class BillingRepositoryService {
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const invoice = this.invoiceRepository.create({
+    const invoiceEntity = this.invoiceRepository.create({
       ...invoiceData,
       customer,
       shippingAddress,
       items,
     });
 
-    return this.invoiceRepository.save(invoice);
+    const savedInvoice = (await this.invoiceRepository.save(
+      invoiceEntity,
+    )) as unknown as Invoice;
+
+    return savedInvoice;
   }
 
   async createCustomer(customerData: Partial<Customer>): Promise<Customer> {
@@ -78,6 +82,14 @@ export class BillingRepositoryService {
     }
 
     return customer;
+  }
+
+  async getAllCustomers(): Promise<Customer[]> {
+    return this.customerRepository.find();
+  }
+
+  async getAllShipping(): Promise<ShippingAddress[]> {
+    return this.shippingRepository.find();
   }
 
   async findShippingAddressById(

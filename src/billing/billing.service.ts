@@ -103,4 +103,22 @@ export class BillingService {
       data: invoice,
     };
   }
+
+  async getAllCustomers(): Promise<ApiResponse> {
+    const customers = await this.billingRepository.getAllCustomers();
+
+    return {
+      status: HttpStatus.OK,
+      message: 'Customers fetched successfully',
+      data: customers,
+    };
+  }
+  async getAllShippingAddresses(): Promise<ApiResponse> {
+    const shippingAddresses = await this.billingRepository.getAllShipping();
+    return {
+      status: HttpStatus.OK,
+      message: 'Shipping Addresses fetched successfully',
+      data: shippingAddresses,
+    };
+  }
 }
