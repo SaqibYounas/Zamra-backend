@@ -33,4 +33,15 @@ export class PriceManagementService {
       data: allPrices,
     };
   }
+
+  // async fetchTodayPrice(payload: string): Promise<ApiResponse> {
+  //   const todayPrice = await this.priceMange.findActivePriceByType(payload.bootleType);
+
+  //   return {
+  //     status: HttpStatus.OK,
+  //     message: PRICE_MESSAGES.SUCCESS.FETCHED,
+  //     data: todayPrice,
+  //   }
+
+  // }
 }

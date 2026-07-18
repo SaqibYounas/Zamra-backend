@@ -29,6 +29,7 @@ export class PriceManagementRepositoryService {
 
   async findAllPrices(): Promise<PriceManagement[]> {
     return await this.priceManagRepository.find({
+      where: { isActive: true },
       order: {
         createdAt: 'DESC',
       },
