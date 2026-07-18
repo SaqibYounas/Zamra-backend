@@ -6,8 +6,10 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
+
 import { BottleType } from '@app-types/types';
 import { DailyStock } from '../daily-stock/dailyStock.entity';
+import { SellingRate } from '../selling-price/selling-price.entity';
 
 @Entity('price_management')
 export class PriceManagement {
@@ -30,10 +32,24 @@ export class PriceManagement {
   @Column('decimal')
   otherExpenses!: number;
 
+  get totalCost(): number {
+    return (
+      Number(this.perBottlePrice) +
+      Number(this.labelCapPrice) +
+      Number(this.otherExpenses)
+    );
+  }
+
+  @OneToMany(() => SellingRate, (sellingRate) => sellingRate.priceManagement)
+  sellingRates!: SellingRate[];
+
   @OneToMany(() => DailyStock, (stock) => stock.priceManagement)
   stocks!: DailyStock[];
 
-  @Column({ type: 'boolean', default: true })
+  @Column({
+    type: 'boolean',
+    default: true,
+  })
   isActive!: boolean;
 
   @CreateDateColumn()
