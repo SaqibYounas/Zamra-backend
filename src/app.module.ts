@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,6 +13,7 @@ import { RagModule } from './chatbot/rag.module';
 import { User } from './auth/user/users.entity';
 import { BillingModule } from './billing/billing.module';
 import { SellingPriceModule } from './selling-price/selling-price.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,10 +28,10 @@ import { SellingPriceModule } from './selling-price/selling-price.module';
         },
       ],
     }),
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
@@ -43,6 +45,7 @@ import { SellingPriceModule } from './selling-price/selling-price.module';
     }),
 
     TypeOrmModule.forFeature([User]),
+
     AuthModule,
     CompanyModule,
     PriceManagementModule,
@@ -53,6 +56,13 @@ import { SellingPriceModule } from './selling-price/selling-price.module';
   ],
 
   controllers: [AppController],
-  providers: [AppService],
+
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
