@@ -22,48 +22,84 @@ else
     OLD_PORT=$GREEN_PORT
 fi
 
-echo "🚀 Deploying new version:"
-echo "New Service: $TARGET_SERVICE"
-echo "New Port: $NEW_PORT"
-echo "Old Service: $OLD_SERVICE"
+echo "================================="
+echo "🚀 Deployment Information"
+echo "New Service : $TARGET_SERVICE"
+echo "New Port    : $NEW_PORT"
+echo "Old Service : $OLD_SERVICE"
+echo "================================="
 
-echo "📦 Building new Docker image..."
+
+echo "📦 Pulling latest code..."
+git pull origin master
+
+
+echo "📦 Building Docker image..."
 sudo docker compose build $TARGET_SERVICE
+
+
 echo "▶️ Starting new container..."
 sudo docker compose up -d $TARGET_SERVICE
+
 
 echo "⏳ Waiting for application startup..."
 sleep 30
 
 
-echo "🔎 Checking application health..."
-if curl -f http://127.0.0.1:$NEW_PORT/health > /dev/null 2>&1
+echo "🔎 Checking container status..."
+
+if sudo docker ps --format "{{.Names}}" | grep -q "$TARGET_SERVICE"
 then
-    echo "✅ New application is healthy"
+    echo "✅ Container started successfully"
 else
-    echo "❌ New application failed health check"
-    echo "📜 Container logs:"
+    echo "❌ Container failed to start"
     sudo docker compose logs --tail=100 $TARGET_SERVICE
     exit 1
 fi
 
-echo "🔄 Switching Nginx traffic..."
-sudo sed -i "s/127.0.0.1:$OLD_PORT/127.0.0.1:$NEW_PORT/g" \
+
+echo "🔎 Checking application health..."
+
+if curl -f http://127.0.0.1:$NEW_PORT/health > /dev/null 2>&1
+then
+    echo "✅ Application is healthy"
+else
+    echo "⚠️ Health endpoint failed"
+    echo "Showing logs..."
+    sudo docker compose logs --tail=100 $TARGET_SERVICE
+    exit 1
+fi
+
+
+echo "🔄 Updating Nginx traffic..."
+
+sudo sed -i \
+"s/127.0.0.1:$OLD_PORT/127.0.0.1:$NEW_PORT/g" \
 /etc/nginx/sites-available/default
 
 
 echo "🧪 Testing Nginx configuration..."
+
 sudo nginx -t
 
 
 echo "♻️ Reloading Nginx..."
+
 sudo systemctl reload nginx
 
 
-echo "🧹 Stopping old deployment..."
+echo "🧹 Removing old container..."
+
 sudo docker compose stop $OLD_SERVICE
 
 
-echo "✅ Deployment completed successfully!"
-echo "Running service: $TARGET_SERVICE"
-echo "Running port: $NEW_PORT"
+echo "🧹 Cleaning unused images..."
+
+sudo docker image prune -f
+
+
+echo "================================="
+echo "✅ Zero Downtime Deployment Done"
+echo "Active Service : $TARGET_SERVICE"
+echo "Active Port    : $NEW_PORT"
+echo "================================="

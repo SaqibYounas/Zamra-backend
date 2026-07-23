@@ -25,4 +25,4 @@ jobs:
             cd ~/zamra/Zamra-backend
             git pull origin master
             chmod +x scripts/deploy.sh
-            ./scripts/deploy.sh
+            sudo ./scripts/deploy.sh
