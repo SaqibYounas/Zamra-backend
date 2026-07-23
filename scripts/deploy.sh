@@ -10,7 +10,7 @@ GREEN_PORT=5001
 
 echo "🔍 Checking current running deployment..."
 
-if docker ps --format "{{.Names}}" | grep -q "zamra-app-blue"; then
+if sudo docker ps --format "{{.Names}}" | grep -q "zamra-app-blue"; then
     TARGET_SERVICE=$GREEN_SERVICE
     OLD_SERVICE=$BLUE_SERVICE
     NEW_PORT=$GREEN_PORT
@@ -28,9 +28,9 @@ echo "New Port: $NEW_PORT"
 echo "Old Service: $OLD_SERVICE"
 
 echo "📦 Building new Docker image..."
-docker compose build $TARGET_SERVICE
+sudo docker compose build $TARGET_SERVICE
 echo "▶️ Starting new container..."
-docker compose up -d $TARGET_SERVICE
+sudo docker compose up -d $TARGET_SERVICE
 
 echo "⏳ Waiting for application startup..."
 sleep 30
@@ -43,7 +43,7 @@ then
 else
     echo "❌ New application failed health check"
     echo "📜 Container logs:"
-    docker compose logs --tail=100 $TARGET_SERVICE
+    sudo docker compose logs --tail=100 $TARGET_SERVICE
     exit 1
 fi
 
@@ -61,7 +61,7 @@ sudo systemctl reload nginx
 
 
 echo "🧹 Stopping old deployment..."
-docker compose stop $OLD_SERVICE
+sudo docker compose stop $OLD_SERVICE
 
 
 echo "✅ Deployment completed successfully!"
