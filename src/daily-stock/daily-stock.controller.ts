@@ -14,6 +14,12 @@ export class DailyStockController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('/today')
+  async getTodayStocks(): Promise<ApiResponse> {
+    return await this.dailyStock.findTodayStocks();
+  }
+
+  @UseGuards(AuthGuard)
   @Post('create')
   async createStock(
     @Body() payload: CreateDailyStockDto,
