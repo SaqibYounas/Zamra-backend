@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: zamra-app-blue
+    container_name: zamra-backend-blue
     restart: always
     ports:
       - "5000:3001"
@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: zamra-app-green
+    container_name: zamra-backend-green
     restart: always
     ports:
       - "5001:3001"
