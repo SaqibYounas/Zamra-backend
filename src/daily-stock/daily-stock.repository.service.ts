@@ -41,4 +41,25 @@ export class DailyStockRepositoryServices {
       },
     });
   }
+
+  async findTodayStockSummary() {
+    const start = new Date();
+    start.setUTCHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setUTCHours(23, 59, 59, 999);
+
+    return this.dailyStockRepository
+      .createQueryBuilder('stock')
+      .select('stock.bottleType', 'bottleType')
+      .addSelect('SUM(stock.totalPet)', 'totalPet')
+      .addSelect('SUM(stock.totalPet * stock.bottlePerPet)', 'totalBottles')
+      .where('stock.createdAt BETWEEN :start AND :end', {
+        start,
+        end,
+      })
+      .groupBy('stock.bottleType')
+      .orderBy('totalBottles', 'DESC')
+      .getRawMany();
+  }
 }

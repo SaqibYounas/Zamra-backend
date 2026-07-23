@@ -25,6 +25,15 @@ export class DailyStockervice {
     };
   }
 
+  async findTodayStocks(): Promise<ApiResponse> {
+    const todayStocks = await this.dailyStockRepository.findTodayStockSummary();
+    return {
+      status: HttpStatus.OK,
+      message: STOCK_MESSAGES.SUCCESS.FETCHED,
+      data: todayStocks,
+    };
+  }
+
   async findAllStocks(): Promise<ApiResponse> {
     const allStocks = await this.dailyStockRepository.findAllStocks();
     return {
