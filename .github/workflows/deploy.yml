@@ -8,21 +8,27 @@ on:
 
 jobs:
   deploy-backend:
-    name: Build & Deploy to AWS EC2
+    name: Deploy Backend to EC2
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code from GitHub
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Execute Zero Downtime Script via SSH
-        uses: appleboy/ssh-action@master
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          timeout: 30m
+          command_timeout: 30m
           script: |
+            set -e
             cd ~/zamra/Zamra-backend
-            git pull origin master
-            chmod +x scripts/deploy.sh
-            sudo ./scripts/deploy.sh
+            git fetch origin
+            git reset --hard origin/master
+            ./scripts/deploy.sh
+
+            echo "Deployment Finished Successfully"
