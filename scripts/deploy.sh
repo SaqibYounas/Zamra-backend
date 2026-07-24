@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -Eeuo pipefail
 
 BLUE_SERVICE="zamra-backend-blue"
 GREEN_SERVICE="zamra-backend-green"
@@ -29,77 +29,56 @@ echo "New Port    : $NEW_PORT"
 echo "Old Service : $OLD_SERVICE"
 echo "================================="
 
-
-echo "📦 Pulling latest code..."
-git pull origin master
-
-
 echo "📦 Building Docker image..."
-sudo docker compose build $TARGET_SERVICE
-
+sudo docker compose build "$TARGET_SERVICE"
 
 echo "▶️ Starting new container..."
-sudo docker compose up -d $TARGET_SERVICE
+sudo docker compose up -d "$TARGET_SERVICE"
 
+echo "⏳ Waiting for application health..."
 
-echo "⏳ Waiting for application startup..."
-sleep 30
+HEALTHY=false
 
+for i in {1..24}; do
+    if curl -fs "http://127.0.0.1:${NEW_PORT}/health" >/dev/null; then
+        HEALTHY=true
+        break
+    fi
 
-echo "🔎 Checking container status..."
+    echo "Waiting... ($i/24)"
+    sleep 5
+done
 
-if sudo docker ps --format "{{.Names}}" | grep -q "$TARGET_SERVICE"
-then
-    echo "✅ Container started successfully"
-else
-    echo "❌ Container failed to start"
-    sudo docker compose logs --tail=100 $TARGET_SERVICE
+if [ "$HEALTHY" != "true" ]; then
+    echo "❌ Health check failed"
+    sudo docker compose logs --tail=100 "$TARGET_SERVICE"
     exit 1
 fi
 
+echo "✅ Application is healthy"
 
-echo "🔎 Checking application health..."
-
-if curl -f http://127.0.0.1:$NEW_PORT/health > /dev/null 2>&1
-then
-    echo "✅ Application is healthy"
-else
-    echo "⚠️ Health endpoint failed"
-    echo "Showing logs..."
-    sudo docker compose logs --tail=100 $TARGET_SERVICE
-    exit 1
-fi
-
-
-echo "🔄 Updating Nginx traffic..."
+echo "🔄 Updating Nginx..."
 
 sudo sed -i \
-"s/127.0.0.1:$OLD_PORT/127.0.0.1:$NEW_PORT/g" \
+"s/127.0.0.1:${OLD_PORT}/127.0.0.1:${NEW_PORT}/g" \
 /etc/nginx/sites-available/default
 
-
-echo "🧪 Testing Nginx configuration..."
-
+echo "🧪 Testing Nginx..."
 sudo nginx -t
 
-
 echo "♻️ Reloading Nginx..."
-
 sudo systemctl reload nginx
 
+echo "🧹 Stopping old container..."
+sudo docker compose stop "$OLD_SERVICE"
 
-echo "🧹 Removing old container..."
-
-sudo docker compose stop $OLD_SERVICE
-
-
-echo "🧹 Cleaning unused images..."
-
+echo "🧹 Removing unused images..."
 sudo docker image prune -f
 
-
 echo "================================="
-echo "✅ Zero Downtime Deployment Done"
+echo "✅ Zero Downtime Deployment Complete"
 echo "Active Service : $TARGET_SERVICE"
 echo "Active Port    : $NEW_PORT"
 echo "================================="
+
+exit 0
