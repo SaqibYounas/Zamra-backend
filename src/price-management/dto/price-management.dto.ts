@@ -9,10 +9,9 @@ import { BottleType } from '@app-types/types';
 import { Transform } from 'class-transformer';
 
 export class CreatePriceManagementDto {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   @IsEnum(BottleType, {
     message:
-      'Bottle type must be a valid option (500ml, 1.5L, 19L_New, 19L_Refill)',
+      'Bottle type must be a valid option (500ml, 1.5L,5L, 19L_New, 19L_Refill)',
   })
   @IsNotEmpty({ message: 'Bottle type is required.' })
   bottleType!: BottleType;
