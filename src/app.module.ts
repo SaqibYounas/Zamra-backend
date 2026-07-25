@@ -38,6 +38,9 @@ import { SellingPriceModule } from './selling-price/selling-price.module';
         entities: [User],
         autoLoadEntities: true,
         synchronize: true,
+        extra: {
+          options: '-c timezone=Asia/Karachi',
+        },
         ssl: {
           rejectUnauthorized: false,
         },

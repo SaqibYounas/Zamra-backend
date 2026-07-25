@@ -1,6 +1,7 @@
 export enum BottleType {
   SMALL = '500ml',
   LARGE = '1.5L',
+  FIVE_LITER = '5L',
   GALLON = '19L',
 }
 
