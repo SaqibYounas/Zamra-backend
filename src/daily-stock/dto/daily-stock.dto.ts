@@ -18,6 +18,5 @@ export class CreateDailyStockDto {
   @IsOptional()
   @IsNumber({}, { message: 'Bottles per pet must be a numeric value.' })
   @Transform(({ value }) => Number(value))
-  @IsNotEmpty({ message: 'Bottles per pet count is required.' })
   bottlePerPet?: number;
 }
