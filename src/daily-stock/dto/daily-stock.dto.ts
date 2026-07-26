@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { BottleType } from '@app-types/types';
 import { Transform } from 'class-transformer';
 
@@ -15,8 +15,8 @@ export class CreateDailyStockDto {
   @IsNotEmpty({ message: 'Total pet count is required.' })
   totalPet!: number;
 
+  @IsOptional()
   @IsNumber({}, { message: 'Bottles per pet must be a numeric value.' })
   @Transform(({ value }) => Number(value))
-  @IsNotEmpty({ message: 'Bottles per pet count is required.' })
-  bottlePerPet!: number;
+  bottlePerPet?: number;
 }
