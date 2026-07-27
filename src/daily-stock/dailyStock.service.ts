@@ -6,7 +6,7 @@ import { STOCK_MESSAGES } from '@common/constants/messages.constant';
 interface IDailyStock {
   bottleType: BottleType;
   totalPet: number;
-  bottlePerPet: number;
+  bottlePerPet?: number;
 }
 
 @Injectable()
