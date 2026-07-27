@@ -24,6 +24,7 @@ jobs:
           script_stop: true
           timeout: 30m
           command_timeout: 30m
+          pty: true
           script: |
             set -e
             cd ~/zamra/Zamra-backend
