@@ -1,5 +1,8 @@
 #!/bin/bash
 
+exec 1>&1
+exec 2>&2
+
 set -Eeuo pipefail
 
 # Enable Docker BuildKit for faster caching
