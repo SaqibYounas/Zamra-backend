@@ -15,6 +15,12 @@ export class SellingPriceController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('active')
+  async getActivePrice(): Promise<ApiResponse> {
+    return await this.sellingPrice.fetchActiveSellingPrice();
+  }
+
+  @UseGuards(AuthGuard)
   @Post('create')
   async createNewPrice(@Body() payload: SellingPriceDto): Promise<ApiResponse> {
     return await this.sellingPrice.registerSellingPrice(payload);
