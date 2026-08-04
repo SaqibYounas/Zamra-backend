@@ -8,7 +8,9 @@ import {
   IsDateString,
   IsOptional,
 } from 'class-validator';
+import { IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { BottleType } from '@app-types/types';
 
 export class CreateInvoiceItemDto {
   @IsString()
@@ -33,6 +35,9 @@ export class CreateInvoiceItemDto {
   @Type(() => Number)
   @IsNotEmpty({ message: 'Sort order is required.' })
   sortOrder!: number;
+
+  @IsEnum(BottleType)
+  bottleType?: BottleType;
 }
 
 export class CreateCustomerDto {

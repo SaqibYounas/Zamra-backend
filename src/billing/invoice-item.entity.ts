@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { Invoice } from './invoice.entity';
+import { BottleType } from '@app-types/types';
 
 @Entity('invoice_items')
 export class InvoiceItem {
@@ -41,6 +42,14 @@ export class InvoiceItem {
     update: false,
   })
   amount!: number;
+
+  @Column({
+    name: 'bottle_type',
+    type: 'enum',
+    enum: BottleType,
+    nullable: true,
+  })
+  bottleType?: BottleType;
 
   @Column({ name: 'sort_order', default: 0 })
   sortOrder!: number;

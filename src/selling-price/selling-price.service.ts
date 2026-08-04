@@ -26,6 +26,17 @@ export class SellingPriceService {
     };
   }
 
+  async fetchActiveSellingPrice(): Promise<ApiResponse> {
+    const getSellingPrice =
+      await this.sellingPriceRepository.findActiveSellingRates();
+
+    return {
+      status: HttpStatus.CREATED,
+      message: 'Fetch active Selling price successfully',
+      data: getSellingPrice,
+    };
+  }
+
   async fetchAllSellingPrice(): Promise<ApiResponse> {
     const getSellingPrice =
       await this.sellingPriceRepository.findAllSellingRates();

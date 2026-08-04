@@ -8,6 +8,7 @@ interface CreateInvoiceItemType {
   qty: number;
   rate: number;
   sortOrder: number;
+  bottleType?: string;
 }
 
 interface CreateCustomerType {
