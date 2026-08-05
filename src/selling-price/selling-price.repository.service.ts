@@ -45,8 +45,8 @@ export class SellingRateRepositoryService {
     });
   }
 
-  async findActiveSellingRates(): Promise<SellingRate> {
-    const sellingRate = await this.sellingRateRepository.findOne({
+  async findActiveSellingRates(): Promise<SellingRate[]> {
+    const sellingRates = await this.sellingRateRepository.find({
       where: {
         isActive: true,
       },
@@ -55,10 +55,10 @@ export class SellingRateRepositoryService {
       },
     });
 
-    if (!sellingRate) {
-      throw new NotFoundException(`No active selling rate found`);
+    if (sellingRates.length === 0) {
+      throw new NotFoundException('No active selling rate found');
     }
 
-    return sellingRate;
+    return sellingRates;
   }
 }
