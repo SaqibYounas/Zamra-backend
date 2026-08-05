@@ -47,6 +47,7 @@ export class InvoiceItem {
     name: 'bottle_type',
     type: 'enum',
     enum: BottleType,
+    enumName: 'price_management_bottletype_enum',
     nullable: true,
   })
   bottleType?: BottleType;
