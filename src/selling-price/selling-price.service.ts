@@ -27,13 +27,23 @@ export class SellingPriceService {
   }
 
   async fetchActiveSellingPrice(): Promise<ApiResponse> {
-    const getSellingPrice =
+    const getSellingPrices =
       await this.sellingPriceRepository.findActiveSellingRates();
 
     return {
       status: HttpStatus.CREATED,
       message: 'Fetch active Selling price successfully',
-      data: getSellingPrice,
+      data: getSellingPrices.map((item) => ({
+        id: item.id,
+        sellingPrice: item.sellingPrice,
+        priceManagementId: item.priceManagementId,
+        isActive: item.isActive,
+        createdAt: item.createdAt,
+        priceManagement: {
+          id: item.priceManagement.id,
+          bottleType: item.priceManagement.bottleType,
+        },
+      })),
     };
   }
 
