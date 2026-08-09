@@ -19,6 +19,7 @@ export class PriceManagement {
   @Column({
     type: 'enum',
     enum: BottleType,
+    enumName: 'price_management_bottletype_enum',
     default: BottleType.SMALL,
   })
   bottleType!: BottleType;

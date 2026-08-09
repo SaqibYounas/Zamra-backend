@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { VectorService } from './vector.service';
-import { SyncService } from './sync.service';
-import { RagService } from './rag.service';
-import { RagController } from './rag.controller';
+import { VectorService } from './services/vector.service';
+import { SyncService } from './services/sync.service';
+import { RagService } from './services/rag.service';
+import { RagController } from './controllers/rag.controller';
 
 @Module({
   imports: [ScheduleModule.forRoot()],

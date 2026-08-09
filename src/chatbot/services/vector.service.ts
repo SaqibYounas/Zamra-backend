@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { QdrantVectorStore } from '@langchain/qdrant';
 import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { Document } from '@langchain/core/documents';
@@ -6,11 +6,12 @@ import { Document } from '@langchain/core/documents';
 @Injectable()
 export class VectorService implements OnModuleInit {
   private vectorStore: QdrantVectorStore | undefined;
+  private readonly logger = new Logger(VectorService.name);
 
   async onModuleInit() {
     try {
       if (!process.env.QDRANT_URL || !process.env.QDRANT_API_KEY) {
-        console.warn(
+        this.logger.warn(
           'Qdrant credentials are not configured yet; vector service will stay inactive.',
         );
         return;
@@ -30,13 +31,16 @@ export class VectorService implements OnModuleInit {
         },
       );
     } catch (error) {
-      console.error('Vector service initialization failed:', error);
+      this.logger.error(
+        'Vector service initialization failed:',
+        error as Error,
+      );
     }
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
     if (!this.vectorStore) {
-      console.warn('Vector store is not ready; skipping document upload.');
+      this.logger.warn('Vector store is not ready; skipping document upload.');
       return;
     }
 

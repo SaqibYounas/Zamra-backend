@@ -21,6 +21,7 @@ export class DailyStock {
   @Column({
     type: 'enum',
     enum: BottleType,
+    enumName: 'daily_stock_bottletype_enum',
     default: BottleType.SMALL,
   })
   bottleType!: BottleType;

@@ -3,6 +3,7 @@ export enum BottleType {
   LARGE = '1.5L',
   FIVE_LITER = '5L',
   GALLON = '19L',
+  REFILL = '19L Refill',
 }
 
 export interface ApiResponse {
