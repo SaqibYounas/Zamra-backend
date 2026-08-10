@@ -37,7 +37,7 @@ import { SellingPriceModule } from './selling-price/selling-price.module';
         url: configService.get<string>('DATABASE_URL'),
         entities: [User],
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
         extra: {
           options: '-c timezone=Asia/Karachi',
         },

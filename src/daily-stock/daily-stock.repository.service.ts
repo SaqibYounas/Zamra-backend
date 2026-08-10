@@ -28,6 +28,7 @@ export class DailyStockRepositoryServices {
 
     const newStockRecord = this.dailyStockRepository.create({
       ...stockData,
+      bottlePerPet: stockData.bottlePerPet ?? 1,
       priceManagement: activePrice,
     });
 

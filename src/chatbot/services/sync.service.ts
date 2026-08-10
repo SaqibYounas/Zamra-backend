@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { VectorService } from './vector.service';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
@@ -7,11 +7,13 @@ import { Client } from 'pg';
 
 @Injectable()
 export class SyncService {
+  private readonly logger = new Logger(SyncService.name);
+
   constructor(private readonly vectorService: VectorService) {}
 
   @Cron('0 */6 * * *')
   async handleSixHourSync() {
-    console.log(
+    this.logger.log(
       'Ingestion Pipeline Triggered: Fetching NeonDB changes from the last 6 hours...',
     );
 
@@ -21,7 +23,6 @@ export class SyncService {
     });
     await client.connect();
 
-    // Tables to index (exclude `users` by default). Add or remove names as needed.
     const tablesToIndex = [
       'company',
       'daily_stock',
@@ -33,36 +34,34 @@ export class SyncService {
 
     for (const table of tablesToIndex) {
       try {
-        // Prefer `updated_at`, fall back to `updatedAt` or fetch all rows if neither column exists
         let res;
         try {
           res = await client.query(
             `SELECT * FROM ${table} WHERE updated_at >= NOW() - INTERVAL '6 hours'`,
           );
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (e) {
+        } catch {
           try {
             res = await client.query(
               `SELECT * FROM ${table} WHERE "updatedAt" >= NOW() - INTERVAL '6 hours'`,
             );
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          } catch (e2) {
-            // If both queries fail (no such column), fetch all rows and filter in JS
+          } catch {
             res = await client.query(`SELECT * FROM ${table}`);
           }
         }
 
         rawData.push({ table, rows: res.rows });
       } catch (err) {
-        console.warn(
-          `Failed to query table ${table}:`,
-          err instanceof Error ? err.message : err,
+        this.logger.warn(
+          `Failed to query table ${table}: ${
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            err instanceof Error ? err.message : err
+          }`,
         );
       }
     }
+
     await client.end();
 
-    // Flatten rows and filter by update timestamp in JS when needed
     const rowsToProcess: { table: string; row: any }[] = [];
     const SIX_HOURS_AGO = Date.now() - 6 * 60 * 60 * 1000;
 
@@ -70,26 +69,23 @@ export class SyncService {
       for (const row of batch.rows) {
         const updated = row.updated_at ?? row.updatedAt ?? row.updatedAt;
         if (updated) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           const updatedTime = new Date(updated).getTime();
           if (updatedTime >= SIX_HOURS_AGO) {
             rowsToProcess.push({ table: batch.table, row });
           }
         } else {
-          // If no timestamp column, include by default
           rowsToProcess.push({ table: batch.table, row });
         }
       }
     }
 
     if (rowsToProcess.length === 0) {
-      console.log(
+      this.logger.log(
         'Ingestion Pipeline: No new or updated data modifications found.',
       );
       return;
     }
 
-    // Initialize character splitter setup
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 500,
       chunkOverlap: 50,
@@ -99,9 +95,7 @@ export class SyncService {
 
     for (const item of rowsToProcess) {
       const row = item.row;
-      // Build a readable text representation from all fields, skipping sensitive fields
       const parts: string[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       for (const key of Object.keys(row)) {
         if (key.toLowerCase().includes('password')) continue;
         const value = row[key];
@@ -127,10 +121,9 @@ export class SyncService {
       }
     }
 
-    // Upload generated chunks into Qdrant Cloud
     if (docsToUpload.length > 0) {
       await this.vectorService.addDocuments(docsToUpload);
-      console.log(
+      this.logger.log(
         `Ingestion Complete: Successfully updated Qdrant with ${docsToUpload.length} new chunks.`,
       );
     }
