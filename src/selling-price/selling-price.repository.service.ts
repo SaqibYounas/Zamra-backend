@@ -13,6 +13,9 @@ export class SellingRateRepositoryService {
   async createSellingRate(
     sellingData: Partial<SellingRate>,
   ): Promise<SellingRate> {
+    if (!sellingData.priceManagementId) {
+      throw new NotFoundException('Price Management ID is required');
+    }
     await this.sellingRateRepository.update(
       {
         priceManagementId: sellingData.priceManagementId,
