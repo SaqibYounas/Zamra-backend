@@ -1,94 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 
-import { InvoiceItem } from 'src/billing/invoice-item.entity';
-import { PriceManagement } from 'src/price-management/priceManagement.entity';
+interface ProfitReportRow {
+  report_date: string | Date;
+  sold_qty: string | number;
+  revenue: string | number;
+  cost: string | number;
+  profit: string | number;
+}
 
 @Injectable()
 export class ProfitService {
-  constructor(
-    @InjectRepository(InvoiceItem)
-    private readonly invoiceItemRepository: Repository<InvoiceItem>,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   async getMonthlyProfitReport() {
     const to = new Date();
-
     const from = new Date();
     from.setDate(from.getDate() - 30);
 
-    const report = await this.invoiceItemRepository
-      .createQueryBuilder('item')
-      .innerJoin(
-        PriceManagement,
-        'pm',
-        `
-        pm.id = (
-          SELECT pm2.id
-              FROM price_management pm2
-                WHERE pm2."bottleType" = item."bottle_type"
-              AND pm2."createdAt" <= item."created_at"
-              ORDER BY pm2."createdAt" DESC
-          LIMIT 1
-        )
-        `,
-      )
-      .select('DATE(item."created_at")', 'date')
-      .addSelect('SUM(item.qty)', 'soldQty')
-      .addSelect('SUM(item.qty * item.rate)', 'revenue')
-      .addSelect(
-        `
-        SUM(
-          item.qty *
-          (
-            COALESCE(pm."perBottlePrice", 0) +
-            COALESCE(pm."labelCapPrice", 0) +
-            COALESCE(pm."otherExpenses", 0)
-          )
-        )
-        `,
-        'cost',
-      )
-      .addSelect(
-        `
-        SUM(
-          (item.qty * item.rate)
-          -
-          (
-            item.qty *
-            (
-              COALESCE(pm."perBottlePrice", 0) +
-              COALESCE(pm."labelCapPrice", 0) +
-              COALESCE(pm."otherExpenses", 0)
-            )
-          )
-        )
-        `,
-        'profit',
-      )
-      .where('item."created_at" BETWEEN :from AND :to', {
-        from,
-        to,
-      })
-      .groupBy('DATE(item."created_at")')
-      .orderBy('DATE(item."created_at")', 'ASC')
-      .getRawMany();
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const totalRevenue = report.reduce(
-      (sum, row) => sum + Number(row.revenue || 0),
-      0,
-    );
+    let rawReport: ProfitReportRow[] = [];
 
-    const totalCost = report.reduce(
-      (sum, row) => sum + Number(row.cost || 0),
-      0,
-    );
+    try {
+      await queryRunner.query(
+        `CALL get_monthly_profit_report_proc($1, $2, 'profit_cur');`,
+        [from, to],
+      );
 
-    const totalProfit = report.reduce(
-      (sum, row) => sum + Number(row.profit || 0),
-      0,
-    );
+      rawReport = await queryRunner.query(`FETCH ALL FROM "profit_cur";`);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+
+    // Data Transformation
+    const report = rawReport.map((row) => ({
+      date: row.report_date,
+      soldQty: Number(row.sold_qty || 0),
+      revenue: Number(row.revenue || 0),
+      cost: Number(row.cost || 0),
+      profit: Number(row.profit || 0),
+    }));
+
+    const totalRevenue = report.reduce((sum, row) => sum + row.revenue, 0);
+    const totalCost = report.reduce((sum, row) => sum + row.cost, 0);
+    const totalProfit = report.reduce((sum, row) => sum + row.profit, 0);
 
     const monthlyProfitHistory = Array(30).fill(0);
 
@@ -98,7 +61,7 @@ export class ProfitService {
       );
 
       if (dayIndex >= 0 && dayIndex < 30) {
-        monthlyProfitHistory[dayIndex] = Number(row.profit || 0);
+        monthlyProfitHistory[dayIndex] = row.profit;
       }
     });
 
