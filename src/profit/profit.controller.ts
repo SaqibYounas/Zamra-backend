@@ -5,8 +5,8 @@ import { ProfitService } from './profit.service';
 export class ProfitController {
   constructor(private readonly profitService: ProfitService) {}
 
-  @Get()
-  async getProfit() {
-    return this.profitService.getProfit();
+  @Get('monthly')
+  getProfit() {
+    return this.profitService.getMonthlyProfitReport();
   }
 }

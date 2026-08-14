@@ -13,7 +13,7 @@ import { RagModule } from './chatbot/rag.module';
 import { User } from './auth/user/users.entity';
 import { BillingModule } from './billing/billing.module';
 import { SellingPriceModule } from './selling-price/selling-price.module';
-
+import { ProfitModule } from './profit/profit.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -56,6 +56,7 @@ import { SellingPriceModule } from './selling-price/selling-price.module';
     RagModule,
     BillingModule,
     SellingPriceModule,
+    ProfitModule,
   ],
 
   controllers: [AppController],
