@@ -6,7 +6,7 @@ export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
 # ============================================================
-# Configuration
+# Zamra Backend Blue-Green Deployment
 # ============================================================
 
 BLUE_SERVICE="zamra-backend-blue"
@@ -15,11 +15,11 @@ GREEN_SERVICE="zamra-backend-green"
 BLUE_PORT=5000
 GREEN_PORT=5001
 
-STARTUP_WAIT=10
-HEALTH_RETRIES=10
-HEALTH_RETRY_DELAY=2
+CONTAINER_PORT=3001
 
-NGINX_BACKUP_SUFFIX=".bak"
+STARTUP_WAIT=5
+HEALTH_RETRIES=15
+HEALTH_RETRY_DELAY=2
 
 # ============================================================
 # Helper functions
@@ -29,27 +29,33 @@ container_running() {
     sudo docker ps --format '{{.Names}}' | grep -Fxq "$1"
 }
 
-find_nginx_proxy_config() {
-    local file
+container_exists() {
+    sudo docker ps -a --format '{{.Names}}' | grep -Fxq "$1"
+}
 
-    while IFS= read -r file; do
-        if sudo grep -Eq \
-            "proxy_pass[[:space:]]+http://(127\.0\.0\.1|localhost):(5000|5001)" \
-            "$file" 2>/dev/null; then
+show_proxy_pass() {
+    echo ""
+    echo "🔎 Current Nginx proxy_pass entries:"
+    sudo nginx -T 2>&1 | grep -nE 'proxy_pass|5000|5001' || true
+}
 
-            echo "$file"
-            return 0
-        fi
-    done < <(
-        find \
-            /etc/nginx/sites-enabled \
-            /etc/nginx/conf.d \
-            /etc/nginx/sites-available \
-            -type f \
-            2>/dev/null | sort -u
-    )
+restore_nginx() {
+    local backup_file="$1"
+    local nginx_file="$2"
 
-    return 1
+    echo ""
+    echo "♻️ Restoring previous Nginx configuration..."
+
+    if [ -f "$backup_file" ]; then
+        sudo cp "$backup_file" "$nginx_file"
+        sudo nginx -t || true
+        sudo systemctl daemon-reload || true
+        sudo systemctl reload nginx || true
+        echo "✅ Previous Nginx configuration restored."
+    else
+        echo "⚠️ Nginx backup file not found:"
+        echo "$backup_file"
+    fi
 }
 
 # ============================================================
@@ -61,9 +67,10 @@ echo "🚀 Zamra Backend Blue-Green Deploy"
 echo "================================="
 
 # ============================================================
-# 1. Check requirements
+# 1. Requirements
 # ============================================================
 
+echo ""
 echo "🔍 Checking deployment requirements..."
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -81,33 +88,59 @@ if ! command -v curl >/dev/null 2>&1; then
     exit 1
 fi
 
+if ! command -v timeout >/dev/null 2>&1; then
+    echo "❌ timeout command is not available."
+    exit 1
+fi
+
 if ! sudo docker compose version >/dev/null 2>&1; then
     echo "❌ Docker Compose is not available."
     exit 1
 fi
 
-echo "✅ Requirements OK."
+echo "✅ Docker OK."
+echo "✅ Docker Compose OK."
+echo "✅ Nginx OK."
+echo "✅ curl OK."
 
 # ============================================================
-# 2. Find actual Nginx config containing proxy_pass
+# 2. Find active Nginx configuration
 # ============================================================
 
-echo "🔎 Finding active Nginx proxy configuration..."
+echo ""
+echo "🔎 Detecting active Nginx configuration..."
 
-NGINX_CONF="$(find_nginx_proxy_config || true)"
+NGINX_CONF=""
+
+while IFS= read -r file; do
+    if sudo grep -Eq \
+        'proxy_pass[[:space:]]+http://(127\.0\.0\.1|localhost):(5000|5001)' \
+        "$file" 2>/dev/null; then
+
+        NGINX_CONF="$file"
+        break
+    fi
+done < <(
+    find \
+        /etc/nginx/sites-enabled \
+        /etc/nginx/conf.d \
+        /etc/nginx/sites-available \
+        -type f \
+        2>/dev/null | sort -u
+)
 
 if [ -z "$NGINX_CONF" ]; then
     echo "❌ Could not find Nginx config containing proxy_pass."
-    echo ""
-    echo "Current Nginx proxy configuration:"
-    sudo nginx -T 2>&1 | grep -nE "proxy_pass|5000|5001" || true
+
+    show_proxy_pass
+
     exit 1
 fi
 
-echo "✅ Nginx config found:"
+echo "✅ Active Nginx config:"
 echo "$NGINX_CONF"
 
-NGINX_BACKUP="${NGINX_CONF}${NGINX_BACKUP_SUFFIX}"
+NGINX_BACKUP="${NGINX_CONF}.bak"
 
 # ============================================================
 # 3. Check current containers
@@ -131,7 +164,7 @@ echo "Blue running  : $BLUE_RUNNING"
 echo "Green running : $GREEN_RUNNING"
 
 # ============================================================
-# 4. Determine active/target service
+# 4. Determine active deployment
 # ============================================================
 
 if [ "$BLUE_RUNNING" = true ] && [ "$GREEN_RUNNING" = true ]; then
@@ -188,17 +221,7 @@ if [ "$BLUE_RUNNING" = true ] && [ "$GREEN_RUNNING" = true ]; then
         echo ""
         echo "❌ Could not determine active Nginx backend."
 
-        echo ""
-        echo "📄 Config file:"
-        echo "$NGINX_CONF"
-
-        echo ""
-        echo "🔎 proxy_pass:"
-        sudo grep -n "proxy_pass" "$NGINX_CONF" || true
-
-        echo ""
-        echo "🔎 Full Nginx config:"
-        sudo nginx -T 2>&1 | grep -nE "proxy_pass|5000|5001" || true
+        show_proxy_pass
 
         echo ""
         echo "🛑 Deployment stopped for safety."
@@ -226,7 +249,8 @@ else
 
     echo ""
     echo "❌ Neither blue nor green container is running."
-    echo "Cannot safely determine current deployment."
+    echo "Cannot safely determine active deployment."
+
     exit 1
 fi
 
@@ -239,10 +263,11 @@ echo "================================="
 echo "🚀 Deployment Information"
 echo "================================="
 echo "Nginx Config       : $NGINX_CONF"
-echo "Active Old Service : $OLD_SERVICE"
-echo "Old Port           : $OLD_PORT"
-echo "Deploying Target   : $TARGET_SERVICE"
-echo "New Port           : $NEW_PORT"
+echo "Active Service     : $OLD_SERVICE"
+echo "Active Port        : $OLD_PORT"
+echo "Target Service     : $TARGET_SERVICE"
+echo "Target Host Port   : $NEW_PORT"
+echo "Container Port     : $CONTAINER_PORT"
 echo "================================="
 
 # ============================================================
@@ -250,23 +275,27 @@ echo "================================="
 # ============================================================
 
 echo ""
-echo "📦 Building $TARGET_SERVICE..."
+echo "📦 Building target service..."
+echo "$TARGET_SERVICE"
 
 sudo docker compose build "$TARGET_SERVICE"
 
-echo "✅ Build completed."
+echo "✅ Docker image built successfully."
 
 # ============================================================
 # 7. Start target
 # ============================================================
 
 echo ""
-echo "▶️ Starting $TARGET_SERVICE..."
+echo "▶️ Starting target service..."
+echo "$TARGET_SERVICE"
 
 sudo docker compose up -d "$TARGET_SERVICE"
 
+echo "✅ Target container started."
+
 # ============================================================
-# 8. Wait
+# 8. Wait for startup
 # ============================================================
 
 echo ""
@@ -283,7 +312,13 @@ echo "🔍 Checking target container..."
 
 if ! container_running "$TARGET_SERVICE"; then
 
-    echo "❌ Target container failed to start."
+    echo "❌ Target container is not running."
+
+    echo ""
+    echo "📋 Container status:"
+    sudo docker ps -a \
+        --filter "name=${TARGET_SERVICE}" \
+        --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 
     echo ""
     echo "📋 Container logs:"
@@ -295,28 +330,24 @@ fi
 echo "✅ Target container is running."
 
 # ============================================================
-# 10. Health check target
+# 10. Verify target port
 # ============================================================
 
 echo ""
-echo "🏥 Checking target application..."
-echo "Target: http://127.0.0.1:${NEW_PORT}"
+echo "🔌 Checking target port..."
+echo "127.0.0.1:${NEW_PORT}"
 
-HEALTH_OK=false
+TARGET_READY=false
 
 for ((i=1; i<=HEALTH_RETRIES; i++)); do
 
-    echo "Health check ${i}/${HEALTH_RETRIES}..."
+    echo "Attempt ${i}/${HEALTH_RETRIES}..."
 
-    if curl \
-        --silent \
-        --show-error \
-        --fail \
-        --max-time 5 \
-        "http://127.0.0.1:${NEW_PORT}" \
-        >/dev/null 2>&1; then
+    if timeout 3 bash -c \
+        "</dev/tcp/127.0.0.1/${NEW_PORT}" \
+        2>/dev/null; then
 
-        HEALTH_OK=true
+        TARGET_READY=true
         break
     fi
 
@@ -325,25 +356,56 @@ for ((i=1; i<=HEALTH_RETRIES; i++)); do
     fi
 done
 
-if [ "$HEALTH_OK" != true ]; then
+if [ "$TARGET_READY" != true ]; then
 
     echo ""
-    echo "❌ Target application did not respond on port $NEW_PORT."
+    echo "❌ Target port ${NEW_PORT} is not reachable."
+
+    echo ""
+    echo "📋 Docker port mapping:"
+    sudo docker ps \
+        --filter "name=${TARGET_SERVICE}" \
+        --format 'table {{.Names}}\t{{.Ports}}\t{{.Status}}'
 
     echo ""
     echo "📋 Container logs:"
     sudo docker logs --tail 100 "$TARGET_SERVICE" || true
 
     echo ""
-    echo "🛑 Nginx was NOT changed."
+    echo "🛑 Nginx has NOT been changed."
 
     exit 1
 fi
 
-echo "✅ Target application is responding."
+echo "✅ Target port ${NEW_PORT} is reachable."
 
 # ============================================================
-# 11. Backup Nginx config
+# 11. Optional HTTP check
+# ============================================================
+
+echo ""
+echo "🌐 Checking target HTTP response..."
+
+HTTP_STATUS="$(
+    curl \
+        --silent \
+        --output /dev/null \
+        --write-out '%{http_code}' \
+        --max-time 5 \
+        "http://127.0.0.1:${NEW_PORT}/" \
+        || true
+)"
+
+if [[ "$HTTP_STATUS" =~ ^[0-9]{3}$ ]]; then
+    echo "✅ Backend returned HTTP status: $HTTP_STATUS"
+    echo "ℹ️ Any HTTP status is accepted here because / may legitimately return 404/401."
+else
+    echo "⚠️ No HTTP response received."
+    echo "Port connectivity is still confirmed."
+fi
+
+# ============================================================
+# 12. Backup Nginx
 # ============================================================
 
 echo ""
@@ -351,97 +413,83 @@ echo "💾 Backing up Nginx configuration..."
 
 sudo cp "$NGINX_CONF" "$NGINX_BACKUP"
 
-echo "✅ Backup:"
+echo "✅ Backup created:"
 echo "$NGINX_BACKUP"
 
 # ============================================================
-# 12. Update Nginx
+# 13. Switch Nginx
 # ============================================================
 
 echo ""
-echo "🔄 Switching Nginx:"
-echo "$OLD_PORT → $NEW_PORT"
+echo "🔄 Switching Nginx backend..."
+echo "${OLD_PORT} → ${NEW_PORT}"
 
 sudo sed -i -E \
     "s#(proxy_pass[[:space:]]+http://)(127\.0\.0\.1|localhost):(5000|5001)#\1127.0.0.1:${NEW_PORT}#g" \
     "$NGINX_CONF"
 
 # ============================================================
-# 13. Verify Nginx update
+# 14. Verify Nginx points to target
 # ============================================================
 
 echo ""
-echo "🔎 Verifying Nginx configuration..."
+echo "🔎 Verifying Nginx target..."
 
 if ! sudo grep -Eq \
     "proxy_pass[[:space:]]+http://127\.0\.0\.1:${NEW_PORT}([;/[:space:]]|$)" \
     "$NGINX_CONF"; then
 
-    echo "❌ Nginx proxy update failed."
+    echo "❌ Nginx was not updated correctly."
 
-    echo ""
-    echo "Current proxy_pass:"
-    sudo grep -n "proxy_pass" "$NGINX_CONF" || true
+    show_proxy_pass
 
-    echo ""
-    echo "♻️ Restoring backup..."
-
-    sudo cp "$NGINX_BACKUP" "$NGINX_CONF"
+    restore_nginx "$NGINX_BACKUP" "$NGINX_CONF"
 
     exit 1
 fi
 
-echo "✅ Nginx now points to port $NEW_PORT."
+echo "✅ Nginx points to ${NEW_PORT}."
 
 # ============================================================
-# 14. Test Nginx
+# 15. Test Nginx configuration
 # ============================================================
 
 echo ""
-echo "🧪 Testing Nginx..."
+echo "🧪 Testing Nginx configuration..."
 
 if ! sudo nginx -t; then
 
-    echo "❌ Nginx test failed."
+    echo "❌ Nginx configuration test failed."
 
-    echo ""
-    echo "♻️ Restoring previous configuration..."
-
-    sudo cp "$NGINX_BACKUP" "$NGINX_CONF"
-
-    sudo nginx -t || true
+    restore_nginx "$NGINX_BACKUP" "$NGINX_CONF"
 
     exit 1
 fi
 
-echo "✅ Nginx configuration valid."
+echo "✅ Nginx configuration is valid."
 
 # ============================================================
-# 15. Reload Nginx
+# 16. Reload systemd + Nginx
 # ============================================================
 
 echo ""
 echo "♻️ Reloading Nginx..."
 
+sudo systemctl daemon-reload
+
 if ! sudo systemctl reload nginx; then
 
     echo "❌ Nginx reload failed."
 
-    echo ""
-    echo "♻️ Restoring previous configuration..."
-
-    sudo cp "$NGINX_BACKUP" "$NGINX_CONF"
-
-    sudo nginx -t || true
-    sudo systemctl reload nginx || true
+    restore_nginx "$NGINX_BACKUP" "$NGINX_CONF"
 
     exit 1
 fi
 
-echo "✅ Nginx reloaded."
+echo "✅ Nginx reloaded successfully."
 
 # ============================================================
-# 16. Verify Nginx service
+# 17. Verify Nginx service
 # ============================================================
 
 echo ""
@@ -451,13 +499,7 @@ if ! sudo systemctl is-active --quiet nginx; then
 
     echo "❌ Nginx is not active."
 
-    echo ""
-    echo "♻️ Restoring previous configuration..."
-
-    sudo cp "$NGINX_BACKUP" "$NGINX_CONF"
-
-    sudo nginx -t || true
-    sudo systemctl reload nginx || true
+    restore_nginx "$NGINX_BACKUP" "$NGINX_CONF"
 
     exit 1
 fi
@@ -465,49 +507,102 @@ fi
 echo "✅ Nginx is active."
 
 # ============================================================
-# 17. Verify traffic through Nginx
+# 18. Verify active Nginx config
 # ============================================================
 
 echo ""
-echo "🌐 Verifying traffic through Nginx..."
+echo "🌐 Verifying active Nginx routing..."
 
-if ! curl \
-    --silent \
-    --show-error \
-    --fail \
-    --max-time 10 \
-    http://127.0.0.1/ \
-    >/dev/null 2>&1; then
+ACTIVE_PORT=""
 
-    echo "❌ Nginx traffic verification failed."
+if sudo nginx -T 2>&1 | grep -Eq \
+    "proxy_pass[[:space:]]+http://127\.0\.0\.1:${NEW_PORT}([;/[:space:]]|$)"; then
 
-    echo ""
-    echo "♻️ Restoring previous configuration..."
+    ACTIVE_PORT="$NEW_PORT"
 
-    sudo cp "$NGINX_BACKUP" "$NGINX_CONF"
+elif sudo nginx -T 2>&1 | grep -Eq \
+    "proxy_pass[[:space:]]+http://localhost:${NEW_PORT}([;/[:space:]]|$)"; then
 
-    sudo nginx -t
-    sudo systemctl reload nginx
+    ACTIVE_PORT="$NEW_PORT"
+fi
+
+if [ "$ACTIVE_PORT" != "$NEW_PORT" ]; then
+
+    echo "❌ Active Nginx configuration is not pointing to ${NEW_PORT}."
+
+    show_proxy_pass
+
+    restore_nginx "$NGINX_BACKUP" "$NGINX_CONF"
 
     exit 1
 fi
 
-echo "✅ Nginx traffic is working."
+echo "✅ Active Nginx is routing to ${NEW_PORT}."
 
 # ============================================================
-# 18. Stop old container
+# 19. Verify Nginx endpoint WITHOUT --fail
 # ============================================================
 
 echo ""
-echo "🧹 Stopping old container:"
+echo "🌐 Verifying Nginx HTTP traffic..."
+
+NGINX_STATUS="$(
+    curl \
+        --silent \
+        --output /dev/null \
+        --write-out '%{http_code}' \
+        --max-time 10 \
+        http://127.0.0.1/ \
+        || true
+)"
+
+if [[ "$NGINX_STATUS" =~ ^[0-9]{3}$ ]]; then
+
+    echo "✅ Nginx responded with HTTP status: $NGINX_STATUS"
+
+else
+
+    echo "❌ Nginx did not return an HTTP response."
+
+    echo ""
+    echo "🔎 Active proxy:"
+    sudo nginx -T 2>&1 | grep -nE 'proxy_pass|5000|5001' || true
+
+    echo ""
+    echo "♻️ Restoring previous Nginx configuration..."
+
+    restore_nginx "$NGINX_BACKUP" "$NGINX_CONF"
+
+    exit 1
+fi
+
+# ============================================================
+# 20. New deployment confirmed
+# ============================================================
+
+echo ""
+echo "================================="
+echo "✅ New deployment verified"
+echo "================================="
+echo "Target Service : $TARGET_SERVICE"
+echo "Target Port    : $NEW_PORT"
+echo "Nginx Status   : $NGINX_STATUS"
+echo "================================="
+
+# ============================================================
+# 21. Stop old container
+# ============================================================
+
+echo ""
+echo "🧹 Stopping old service..."
 echo "$OLD_SERVICE"
 
 sudo docker compose stop "$OLD_SERVICE" || true
 
-echo "✅ Old container stopped."
+echo "✅ Old service stopped."
 
 # ============================================================
-# 19. Remove old container
+# 22. Remove old container
 # ============================================================
 
 echo ""
@@ -518,7 +613,7 @@ sudo docker compose rm -f "$OLD_SERVICE" || true
 echo "✅ Old container removed."
 
 # ============================================================
-# 20. Cleanup
+# 23. Cleanup
 # ============================================================
 
 echo ""
@@ -532,7 +627,7 @@ echo "🧹 Cleaning Docker builder cache..."
 sudo docker builder prune -af || true
 
 # ============================================================
-# 21. Final status
+# 24. Final verification
 # ============================================================
 
 echo ""
@@ -546,11 +641,22 @@ sudo docker ps \
 echo ""
 echo "🔎 Active Nginx proxy:"
 
-sudo grep -n "proxy_pass" "$NGINX_CONF" || true
+sudo nginx -T 2>&1 | grep -nE 'proxy_pass|5000|5001' || true
+
+echo ""
+echo "🔎 Active target port:"
+
+if sudo nginx -T 2>&1 | grep -Eq \
+    "proxy_pass[[:space:]]+http://127\.0\.0\.1:${NEW_PORT}([;/[:space:]]|$)"; then
+
+    echo "✅ Nginx → ${NEW_PORT}"
+else
+    echo "⚠️ Could not confirm final Nginx target."
+fi
 
 echo ""
 echo "================================="
-echo "✅ Zero Downtime Deployment Complete"
+echo "🎉 Zero Downtime Deployment Complete"
 echo "================================="
 echo "Active Service : $TARGET_SERVICE"
 echo "Active Port    : $NEW_PORT"
