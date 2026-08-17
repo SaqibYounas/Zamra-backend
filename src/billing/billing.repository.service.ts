@@ -56,8 +56,100 @@ export class BillingRepositoryService {
     return await this.shippingRepository.save(newShipping);
   }
 
+  async getAllInvoicesBuilder(): Promise<Invoice[]> {
+    return await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.items', 'items')
+      .leftJoin('invoice.customer', 'customer')
+      .addSelect(['customer.id', 'customer.name', 'customer.email'])
+      .leftJoinAndSelect('invoice.shippingAddress', 'shippingAddress')
+      .orderBy('invoice.id', 'DESC')
+      .getMany();
+  }
+
+  async updateInvoice(
+    id: number,
+    updateData: Partial<Invoice>,
+  ): Promise<Invoice> {
+    const invoice = await this.invoiceRepository.findOne({
+      where: { id } as any,
+    });
+
+    if (!invoice) {
+      throw new NotFoundException(`Invoice with ID ${id} not found.`);
+    }
+
+    Object.assign(invoice, updateData);
+    return await this.invoiceRepository.save(invoice);
+  }
+
+  async deleteInvoiceWithBuilder(id: number): Promise<{ message: string }> {
+    const result = await this.invoiceRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Invoice)
+      .where('id = :id', { id })
+      .execute();
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Invoice with ID ${id} not found.`);
+    }
+
+    return { message: `Invoice #${id} successfully deleted.` };
+  }
+
   async findCustomerByEmail(email: string): Promise<Customer | null> {
     return await this.customerRepository.findOne({ where: { email } as any });
+  }
+
+  async updateCustomer(
+    id: number,
+    updateData: Partial<Customer>,
+  ): Promise<Customer> {
+    const customer = await this.findCustomerById(id);
+
+    Object.assign(customer, updateData);
+    return await this.customerRepository.save(customer);
+  }
+
+  async deleteCustomer(id: number): Promise<{ message: string }> {
+    const result = await this.customerRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Customer)
+      .where('id = :id', { id })
+      .execute();
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Customer with ID ${id} not found.`);
+    }
+
+    return { message: `Customer #${id} successfully deleted.` };
+  }
+
+  async updateShippingAddress(
+    id: number,
+    shippingData: Partial<ShippingAddress>,
+  ): Promise<ShippingAddress> {
+    const shippingAddress = await this.findShippingAddressById(id);
+
+    Object.assign(shippingAddress, shippingData);
+    return await this.shippingRepository.save(shippingAddress);
+  }
+
+  async deleteShippingAddress(id: number): Promise<{ message: string }> {
+    const result = await this.shippingRepository
+      .createQueryBuilder()
+      .delete()
+      .from(ShippingAddress)
+      .where('id = :id', { id })
+      .execute();
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Shipping address with ID ${id} not found.`);
+    }
+
+    return { message: `Shipping address #${id} successfully deleted.` };
   }
 
   async findShippingAddressByPhone(
@@ -84,12 +176,26 @@ export class BillingRepositoryService {
     return customer;
   }
 
-  async getAllCustomers(): Promise<Customer[]> {
-    return this.customerRepository.find();
+  async getAllCustomers(page: number = 1): Promise<Customer[]> {
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    return this.customerRepository.find({
+      take: limit,
+      skip: skip,
+      order: { id: 'DESC' } as any,
+    });
   }
 
-  async getAllShipping(): Promise<ShippingAddress[]> {
-    return this.shippingRepository.find();
+  async getAllShipping(page: number = 1): Promise<ShippingAddress[]> {
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    return this.shippingRepository.find({
+      take: limit,
+      skip: skip,
+      order: { id: 'DESC' } as any,
+    });
   }
 
   async findShippingAddressById(
