@@ -1,11 +1,7 @@
 #!/bin/bash
 
-exec 1>&1
-exec 2>&2
-
 set -Eeuo pipefail
 
-# Enable Docker BuildKit for faster caching
 export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
@@ -15,10 +11,12 @@ GREEN_SERVICE="zamra-backend-green"
 BLUE_PORT=5000
 GREEN_PORT=5001
 
+NGINX_CONF="/etc/nginx/sites-available/default"
+
 echo "🔍 Checking current running deployment..."
 
-# Note: Container name check matches docker-compose container_name
-if sudo docker ps --format "{{.Names}}" | grep -q "^${BLUE_SERVICE}$"; then
+# Container name match check (flexible grep)
+if sudo docker ps --format "{{.Names}}" | grep -q "${BLUE_SERVICE}"; then
     TARGET_SERVICE=$GREEN_SERVICE
     OLD_SERVICE=$BLUE_SERVICE
     NEW_PORT=$GREEN_PORT
@@ -32,9 +30,8 @@ fi
 
 echo "================================="
 echo "🚀 Deployment Information"
-echo "New Service : $TARGET_SERVICE"
-echo "New Port    : $NEW_PORT"
-echo "Old Service : $OLD_SERVICE"
+echo "Active Old Service : $OLD_SERVICE (Port: $OLD_PORT)"
+echo "Deploying Target   : $TARGET_SERVICE (Port: $NEW_PORT)"
 echo "================================="
 
 echo "📦 Building Docker image..."
@@ -46,10 +43,18 @@ sudo docker compose up -d "$TARGET_SERVICE"
 echo "⏳ Waiting for application startup..."
 sleep 10
 
-echo "🔄 Updating Nginx..."
-sudo sed -i \
-"s/127.0.0.1:${OLD_PORT}/127.0.0.1:${NEW_PORT}/g" \
-/etc/nginx/sites-available/default
+echo "🔄 Updating Nginx Configuration..."
+
+# Regex match: Yeh 5000 ya 5001 dono ko target NEW_PORT se replace kar dega
+sudo sed -i -E "s/(127\.0\.0\.1|localhost):(5000|5001)/127.0.0.1:${NEW_PORT}/g" "$NGINX_CONF"
+
+# Verification step
+if grep -q "127.0.0.1:${NEW_PORT}" "$NGINX_CONF"; then
+    echo "✅ Nginx config successfully updated to port ${NEW_PORT}"
+else
+    echo "❌ Error: Failed to update port in $NGINX_CONF"
+    exit 1
+fi
 
 echo "🧪 Testing Nginx..."
 sudo nginx -t
@@ -58,13 +63,10 @@ echo "♻️ Reloading Nginx..."
 sudo systemctl reload nginx
 
 echo "🧹 Stopping old container..."
-sudo docker compose stop "$OLD_SERVICE"
+sudo docker compose stop "$OLD_SERVICE" || true
 
-echo "🧹 Cleaning up unused Docker resources and build cache..."
-# Forcefully remove all stopped containers, unused networks, and unused images
+echo "🧹 Cleaning up unused Docker resources..."
 sudo docker system prune -af --volumes
-
-# Clear Docker build cache to free up disk space
 sudo docker builder prune -af
 
 echo "================================="
