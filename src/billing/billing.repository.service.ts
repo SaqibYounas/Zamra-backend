@@ -61,10 +61,31 @@ export class BillingRepositoryService {
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.items', 'items')
       .leftJoin('invoice.customer', 'customer')
-      .addSelect(['customer.id', 'customer.name', 'customer.email'])
+      .addSelect([
+        'customer.id',
+        'customer.companyName',
+        'customer.attentionPoc',
+        'customer.email',
+      ])
       .leftJoinAndSelect('invoice.shippingAddress', 'shippingAddress')
       .orderBy('invoice.id', 'DESC')
       .getMany();
+  }
+
+  async getInvoiceById(id: number): Promise<Invoice | null> {
+    return await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.items', 'items')
+      .leftJoin('invoice.customer', 'customer')
+      .addSelect([
+        'customer.id',
+        'customer.companyName',
+        'customer.attentionPoc',
+        'customer.email',
+      ])
+      .leftJoinAndSelect('invoice.shippingAddress', 'shippingAddress')
+      .where('invoice.id = :id', { id })
+      .getOne();
   }
 
   async updateInvoice(

@@ -29,9 +29,13 @@ export class BillingController {
     return this.billingService.createInvoice(billingData);
   }
 
-  @Get('bills')
+  @Get('invoices')
   async getInvoices() {
     return this.billingService.getAllInvoices();
+  }
+  @Get('invoice/:id')
+  async getInvoiceById(@Param('id', ParseIntPipe) id: number) {
+    return this.billingService.getInvoiceById(id);
   }
 
   @Put('invoice/:id')
