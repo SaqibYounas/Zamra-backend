@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, NotFoundException } from '@nestjs/common';
 import { BillingRepositoryService } from './billing.repository.service';
 import { ApiResponse } from '@app-types/types';
 import { Invoice } from './invoice.entity';
@@ -107,7 +107,15 @@ export class BillingService {
       data: invoice,
     };
   }
+  async getInvoiceById(id: number): Promise<Invoice> {
+    const invoice = await this.billingRepository.getInvoiceById(id);
 
+    if (!invoice) {
+      throw new NotFoundException(`Invoice with ID ${id} not found.`);
+    }
+
+    return invoice;
+  }
   async getAllInvoices(): Promise<ApiResponse> {
     const bills = await this.billingRepository.getAllInvoicesBuilder();
     return {
